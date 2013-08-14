@@ -1,0 +1,127 @@
+.installer{
+    position : absolute;
+    left : 0;
+    top : 0;
+    right : 0;
+    bottom : 0;
+    background : #202020;
+    -webkit-font-smoothing: antialiased;
+    z-index : 10000;
+}
+
+.installer blockquote{
+    width : 700px;
+    height : 400px;
+    background : url(images/background.png);
+    position : absolute;
+    left : 50%;
+    top : 50%;
+    margin : -200px 0 0 -350px;
+    padding : 0;
+    border : 1px solid rgb(51, 51, 51);
+    border-color : rgba(255,255,255,0.06) rgba(0,0,0,0.3) rgba(0,0,0,0.3) rgba(255,255,255,0.06);
+    box-shadow : 1px 0 0 rgba(255,255,255,0.06), 0 1px 0 rgba(255,255,255,0.06), 
+        -1px 0 0 rgba(0,0,0,0.3), 0 -1px 0 rgba(0,0,0,0.3);
+    border-radiu : 3px;
+}
+
+.installer .title {
+    position: absolute;
+    color: rgb(182, 182, 182);
+    font-family: Arial;
+    font-size: 30px;
+    left: 120px;
+    top: 33px;
+    text-shadow: 1px 1px 0 rgb(10, 10, 10);
+}
+
+.installer .log{
+    position : absolute;
+    left : 20px;
+    top : 120px;
+    right : 20px;
+    bottom : 20px;
+    background : #153649;
+    padding : 20px 20px 40px 20px;
+    overflow : auto;
+    color : #fff;
+    line-height: 1.4em;
+    font-family : Ubuntu Mono, Menlo, Consolas, monospace;
+    font-size : 12px;
+    margin : 0;
+    
+    background-image: -webkit-linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
+    background-image: -moz-linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
+    background-image: linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
+    
+    border : 1px solid white;
+    border-color : rgba(255,255,255,0.06) rgba(0,0,0,0.3) rgba(0,0,0,0.3) rgba(255,255,255,0.06);
+    box-shadow : 1px 0 0 rgba(255,255,255,0.06), 0 1px 0 rgba(255,255,255,0.06), 
+        -1px 0 0 rgba(0,0,0,0.3), 0 -1px 0 rgba(0,0,0,0.3);
+}
+
+.installer .log .output{
+    display : none;
+    color : gray;
+    margin : 10px;
+}
+
+.installer .log.details .output{
+    display : block;
+}
+
+.installer .log .error{
+    color : orange;
+}
+
+.installer .cb{
+    position: absolute;
+    top: 99px;
+    right: 21px;
+}
+
+.installer .cb label{
+    font-family: Arial;
+    font-size: 12px;
+    color: #f1f1f1;
+}
+
+.installer button{
+    position: absolute;
+    left: 40px;
+    bottom: 40px;
+    height: 24px;
+    width: 82px;
+    border-radius: 3px;
+    background: green;
+    border: 0;
+    box-shadow: 0 1px rgba(255,255,255,0.5) inset, 0 0 3px black;
+    font-weight: bold;
+    color: white;
+    display: none;
+}
+.installer button:hover{
+    background: rgb(32, 168, 32);
+}
+.installer button:active{
+    background: rgb(5, 97, 5);
+    outline: none;
+}
+
+.installer .progress{
+    position: absolute;
+    left: 35px;
+    bottom: 40px;
+    font-family: arial;
+    font-size: 12px;
+    color: white;
+    padding-left: 20px;
+}
+.installer .progress span{
+     width: 14px;
+    height: 14px;
+    display: block;
+    position: absolute;
+    left: 4px;
+    top: -1px;
+}
