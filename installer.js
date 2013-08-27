@@ -30,23 +30,24 @@ define(function(require, exports, module) {
             progress("Adding c9 cli to the PATH");
             
             var add, remove, line;
+            var init = "SCRIPT=`[ -e ~/.bash_profile ] && echo .bash_profile || ([ -e ~/.bashrc ] && echo .bashrc || echo .profile)`"
             if (options.platform == "darwin") {
                 line   = "export PATH=~/Applications/cloud9.app/Contents/"
                     + "Resources/app.nw/bin:$PATH";
-                add    = "echo '" + line + "' >> ~/.bash_profile";
-                remove = 'cat ~/.bash_profile | sed '
+                add    = "echo '" + line + "' >> $SCRIPT";
+                remove = 'cat $SCRIPT | sed '
                     + '"s/export PATH=~\\/Applications\\/cloud9.app.*//"'
-                    + ' > ~/.bash_profile';
+                    + ' > $SCRIPT';
             }
             else if (options.platform == "linux") {
                 line   = "export PATH=~/bin:$PATH";
-                add    = "echo '" + line + "' >> ~/.bashrc";
-                remove = 'cat ~/.bashrc | sed '
-                    + '"s/export PATH=~\\/bin.*//" > ~/.bashrc';
+                add    = "echo '" + line + "' >> $SCRIPT";
+                remove = 'cat $SCRIPT | sed '
+                    + '"s/export PATH=~\\/bin.*//" > $SCRIPT';
             }
             
             proc.execFile("bash", {
-                args: ["-c", remove + " && " + add]
+                args: ["-c", init + " && " + remove + " && " + add]
             }, function(err, stdout, stderr){
                 if (err || stderr) return callback(err || stderr);
                 
