@@ -35,15 +35,16 @@ define(function(require, exports, module) {
                 line   = "export PATH=~/Applications/cloud9.app/Contents/"
                     + "Resources/app.nw/bin:$PATH";
                 add    = "echo '" + line + "' >> $SCRIPT";
-                remove = 'cat $SCRIPT | sed '
-                    + '"s/export PATH=~\\/Applications\\/cloud9.app.*//"'
-                    + ' > $SCRIPT';
+                remove = 'sed -i "" '
+                    + '"s/export PATH=~\\/Applications\\/cloud9.app.*//" '
+                    + '$SCRIPT';
             }
             else if (options.platform == "linux") {
                 line   = "export PATH=~/bin:$PATH";
                 add    = "echo '" + line + "' >> $SCRIPT";
-                remove = 'cat $SCRIPT | sed '
-                    + '"s/export PATH=~\\/bin.*//" > $SCRIPT';
+                remove = 'sed -i '
+                    + '"s/export PATH=~\\/bin.*//" '
+                    + '$SCRIPT';
             }
             
             proc.execFile("bash", {
