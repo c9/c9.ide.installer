@@ -101,7 +101,7 @@ define(function(require, exports, module) {
                 div.parentNode.removeChild(div);
             });
             
-            c9.on("state.change", function(e){
+            c9.on("stateChange", function(e){
                 if (!(e.state & c9.NETWORK)) {
                     spinner.innerHTML = "<div style='color:orange'>Lost network "
                         + "connection. Please restart Cloud9 IDE and "
