@@ -5,12 +5,12 @@
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
 define(function(require, exports, module) {
-    main.consumes = ["c9", "Plugin", "proc", "fs", "ui"];
+    main.consumes = ["c9", "plugin", "proc", "fs", "ui"];
     main.provides = ["installer"];
     return main;
 
     function main(options, imports, register) {
-        var Plugin   = imports.Plugin;
+        var Plugin   = imports.plugin;
         var c9       = imports.c9;
         var fs       = imports.fs;
         var ui       = imports.ui;
@@ -101,7 +101,7 @@ define(function(require, exports, module) {
                 div.parentNode.removeChild(div);
             });
             
-            c9.on("stateChange", function(e){
+            c9.on("state.change", function(e){
                 if (!(e.state & c9.NETWORK)) {
                     spinner.innerHTML = "<div style='color:orange'>Lost network "
                         + "connection. Please restart Cloud9 IDE and "
