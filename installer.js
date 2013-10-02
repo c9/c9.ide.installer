@@ -30,7 +30,7 @@ define(function(require, exports, module) {
             progress("Adding c9 cli to the PATH");
             
             var add, remove, line;
-            var init = "SCRIPT=`[ -e ~/.bash_profile ] && echo .bash_profile || ([ -e ~/.bashrc ] && echo .bashrc || echo .profile)`"
+            var init = "SCRIPT=`[ -e ~/.bash_profile ] && echo .bash_profile || ([ -e ~/.bashrc ] && echo .bashrc || echo .profile)`";
             if (options.platform == "darwin") {
                 line   = "export PATH=~/Applications/cloud9.app/Contents/"
                     + "Resources/app.nw/bin:$PATH";
@@ -66,7 +66,7 @@ define(function(require, exports, module) {
                         }
                         else
                             callback(err);
-                    })
+                    });
                 });
             });
         }
@@ -174,7 +174,7 @@ define(function(require, exports, module) {
                 button.onclick = function(){
                     plugin.unload();
                     callback();
-                }
+                };
                 
                 if (errors.length) {
                     logln("<span class='error'>"
@@ -189,7 +189,6 @@ define(function(require, exports, module) {
                     spinner.style.display = "none";
                 }
                 else {
-                    
                     fs.writeFile("~/.c9/installed", "1", function(){
                         logln("Done.");
                         button.style.display = "block";
