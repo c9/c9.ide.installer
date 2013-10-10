@@ -6,6 +6,7 @@
     bottom : 0;
     background : #202020;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     z-index : 10000;
 }
 
