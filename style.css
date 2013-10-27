@@ -13,7 +13,7 @@
 .installer blockquote{
     width : 700px;
     height : 400px;
-    background : url(images/background.png);
+    background : url("@{image-path}/background.png");
     position : absolute;
     left : 50%;
     top : 50%;
