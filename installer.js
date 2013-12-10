@@ -1,69 +1,17 @@
 define(function(require, exports, module) {
-    main.consumes = ["c9", "Plugin", "proc", "fs", "ui"];
+    main.consumes = ["Wizard", "WizardPage", "ui"];
     main.provides = ["installer"];
     return main;
 
     function main(options, imports, register) {
-        var Plugin   = imports.Plugin;
-        var c9       = imports.c9;
-        var fs       = imports.fs;
-        var ui       = imports.ui;
-        var proc     = imports.proc;
+        var Wizard     = imports.Wizard;
+        var WizardPage = imports.WizardPage;
+        var ui         = imports.ui;
         
         /***** Initialization *****/
         
-        var plugin = new Plugin("Ajax.org", main.consumes);
-        // var emit   = plugin.getEmitter();
-        
-        var core = [
-            "c9", "vfs", "fs", "proc", "net", "layout"
-        ];
-        var logDiv, lastOutput, button, spinner;
-        
-        function install(callback, progress){
-            progress("Adding c9 cli to the PATH");
-            
-            var add, remove, line;
-            var init = "SCRIPT=`[ -e ~/.bash_profile ] && echo .bash_profile || ([ -e ~/.bashrc ] && echo .bashrc || echo .profile)`";
-            if (options.platform == "darwin") {
-                line   = "export PATH=~/Applications/cloud9.app/Contents/"
-                    + "Resources/app.nw/bin:$PATH";
-                add    = "echo '" + line + "' >> $SCRIPT";
-                remove = 'sed -i "" '
-                    + '"s/export PATH=~\\/Applications\\/cloud9.app.*//" '
-                    + '$SCRIPT';
-            }
-            else if (options.platform == "linux") {
-                line   = "export PATH=~/bin:$PATH";
-                add    = "echo '" + line + "' >> $SCRIPT";
-                remove = 'sed -i '
-                    + '"s/export PATH=~\\/bin.*//" '
-                    + '$SCRIPT';
-            }
-            
-            proc.execFile("bash", {
-                args: ["-c", init + " && " + remove + " && " + add]
-            }, function(err, stdout, stderr){
-                if (err || stderr) return callback(err || stderr);
-                
-                progress(stdout, true);
-                progress("Creating .c9 folder in homedir");
-                fs.mkdir("~/.c9", function(err){
-                    
-                    fs.exists("~/.c9/version", function(exists){
-                        if (!exists) {
-                            fs.rename("~/Applications/cloud9.app/Contents/"
-                                + "Resources/app.nw/version",
-                                "~/.c9/version", function(){
-                                    callback(err);
-                                });
-                        }
-                        else
-                            callback(err);
-                    });
-                });
-            });
-        }
+        var plugin = new Wizard("Ajax.org", main.consumes, {});
+        var emit   = plugin.getEmitter();
         
         var loaded = false;
         function load(){
@@ -102,6 +50,52 @@ define(function(require, exports, module) {
                         + "try again.</div>";
                 }
             }, plugin);
+        }
+        
+        var drawn;
+        function draw(){
+            if (drawn) return;
+            drawn = true;
+            
+            // Page Choice - explain + choice manual vs automatic
+            var choice = new WizardPage();
+            choice.on("draw", function(options){
+                ui.insertHtml(options.container, 
+                    require("text!./pages/choice.html"), choice);
+                
+            });
+            
+            // Page Automatic - Show Log Output & Checkbox
+            var automatic = new WizardPage();
+            automatic.on("draw", function(options){
+                ui.insertHtml(options.container, 
+                    require("text!./pages/automatic.html"), automatic);
+                
+            });
+            
+            // Page Manual - Explain the Manual Process (show terminal?) + Button to Retry
+            var manual = new WizardPage();
+            manual.on("draw", function(options){
+                ui.insertHtml(options.container, 
+                    require("text!./pages/manual.html"), manual);
+                
+            });
+            
+            // Page Done - Message Saying that the Installation has completed Successfully
+            var done = new WizardPage();
+            done.on("draw", function(options){
+                ui.insertHtml(options.container, 
+                    require("text!./pages/done.html"), done);
+                
+            });
+            
+            // Page Error - Message Saying that the Installation has got an erro
+            var error = new WizardPage();
+            error.on("draw", function(options){
+                ui.insertHtml(options.container, 
+                    require("text!./pages/error.html"), error);
+                
+            });
         }
         
         /***** Methods *****/
