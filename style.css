@@ -1,45 +1,49 @@
-.installer{
-    position : absolute;
-    left : 0;
-    top : 0;
-    right : 0;
-    bottom : 0;
-    background : #202020;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    z-index : 10000;
+.page{
+    padding : 20px 20px 25px 20px;
 }
 
-.installer blockquote{
-    width : 700px;
-    height : 400px;
-    background : url("@{image-path}/background.png");
-    position : absolute;
-    left : 50%;
-    top : 50%;
-    margin : -200px 0 0 -350px;
-    padding : 0;
-    border : 1px solid rgb(51, 51, 51);
-    border-color : rgba(255,255,255,0.06) rgba(0,0,0,0.3) rgba(0,0,0,0.3) rgba(255,255,255,0.06);
-    box-shadow : 1px 0 0 rgba(255,255,255,0.06), 0 1px 0 rgba(255,255,255,0.06), 
-        -1px 0 0 rgba(0,0,0,0.3), 0 -1px 0 rgba(0,0,0,0.3);
-    border-radiu : 3px;
+.page h3{
+    margin-top : 0;
+}
+
+.choice{
+    margin: 0;
+    padding: 0;
+}
+
+.choice li{
+    list-style-type: none;
+    margin: 0 0 4px 20px;
+}
+
+pre.code{
+    background: rgb(196, 196, 196);
+    padding: 10px;
+    border-radius: 3px;
+    font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, source-code-pro, monospace;
+    border: 1px solid rgb(163, 163, 163);
+}
+
+.installer{
+    background : #272727;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height : 250px;
+    position : relative;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .installer .title {
-    position: absolute;
     color: rgb(182, 182, 182);
     font-family: Arial;
-    font-size: 30px;
-    left: 120px;
-    top: 33px;
+    font-size: 20px;
     text-shadow: 1px 1px 0 rgb(10, 10, 10);
 }
 
 .installer .log{
     position : absolute;
     left : 20px;
-    top : 120px;
+    top : 60px;
     right : 20px;
     bottom : 20px;
     background : #153649;
@@ -77,7 +81,7 @@
 
 .installer .cb{
     position: absolute;
-    top: 99px;
+    top: 40px;
     right: 21px;
 }
 
@@ -85,28 +89,6 @@
     font-family: Arial;
     font-size: 12px;
     color: #f1f1f1;
-}
-
-.installer button{
-    position: absolute;
-    left: 40px;
-    bottom: 40px;
-    height: 24px;
-    width: 82px;
-    border-radius: 3px;
-    background: green;
-    border: 0;
-    box-shadow: 0 1px rgba(255,255,255,0.5) inset, 0 0 3px black;
-    font-weight: bold;
-    color: white;
-    display: none;
-}
-.installer button:hover{
-    background: rgb(32, 168, 32);
-}
-.installer button:active{
-    background: rgb(5, 97, 5);
-    outline: none;
 }
 
 .installer .progress{
