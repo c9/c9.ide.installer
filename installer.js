@@ -22,6 +22,22 @@ define(function(require, exports, module) {
             if (loaded) return;
             loaded = true;
             
+            plugin.on("cancel", function(e){
+                if (e.page.name == "automatic") {
+                    // @todo fjakobs - cancel the installation
+                }
+                // @todo return to the dashboard
+            });
+            
+            plugin.on("finish", function(e){
+                if (e.page.name == "manual") {
+                    // @todo fjakobs
+                }
+                else if (e.page.name == "automatic") {
+                    // @todo fjakobs
+                }
+            });
+            
             plugin.show(true);
         }
         
