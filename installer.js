@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-    main.consumes = ["Wizard", "WizardPage", "ui"];
+    main.consumes = ["Wizard", "WizardPage", "ui", "ext"];
     main.provides = ["installer"];
     return main;
 
@@ -7,6 +7,7 @@ define(function(require, exports, module) {
         var Wizard     = imports.Wizard;
         var WizardPage = imports.WizardPage;
         var ui         = imports.ui;
+        var ext        = imports.ext;
         
         /***** Initialization *****/
         
@@ -23,19 +24,25 @@ define(function(require, exports, module) {
             loaded = true;
             
             plugin.on("cancel", function(e){
-                if (e.page.name == "automatic") {
+                if (e.activePage.name == "automatic") {
                     // @todo fjakobs - cancel the installation
                 }
                 // @todo return to the dashboard
             });
             
             plugin.on("finish", function(e){
-                if (e.page.name == "manual") {
+                if (e.activePage.name == "manual") {
                     // @todo fjakobs
                 }
-                else if (e.page.name == "automatic") {
+                else if (e.activePage.name == "automatic") {
                     // @todo fjakobs
                 }
+                
+                // Unload all plugins from this architect config
+                ext.unloadAllPlugins();
+                
+                // Load a new architect config
+                // @todo
             });
             
             plugin.show(true);
