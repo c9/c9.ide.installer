@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-    main.consumes = ["Wizard", "WizardPage", "ui", "ext"];
+    main.consumes = ["Wizard", "WizardPage", "ui", "vfs"];
     main.provides = ["installer"];
     return main;
 
@@ -7,14 +7,14 @@ define(function(require, exports, module) {
         var Wizard     = imports.Wizard;
         var WizardPage = imports.WizardPage;
         var ui         = imports.ui;
-        var ext        = imports.ext;
+        var vfs        = imports.vfs;
         
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
             title: "Installation Wizard"
         });
-        var emit   = plugin.getEmitter();
+        // var emit   = plugin.getEmitter();
         
         var logDiv, spinner, lastOutput;
         
@@ -23,29 +23,13 @@ define(function(require, exports, module) {
             if (loaded) return;
             loaded = true;
             
-            plugin.on("cancel", function(e){
-                if (e.activePage.name == "automatic") {
-                    // @todo fjakobs - cancel the installation
-                }
-                // @todo return to the dashboard
+            vfs.on("install", function(e){
+                plugin.once("finish", function(){
+                    plugin.hide();
+                    e.callback();
+                });
+                plugin.show(true);
             });
-            
-            plugin.on("finish", function(e){
-                if (e.activePage.name == "manual") {
-                    // @todo fjakobs
-                }
-                else if (e.activePage.name == "automatic") {
-                    // @todo fjakobs
-                }
-                
-                // Unload all plugins from this architect config
-                ext.unloadAllPlugins();
-                
-                // Load a new architect config
-                // @todo
-            });
-            
-            plugin.show(true);
         }
         
         var drawn;
@@ -213,7 +197,15 @@ define(function(require, exports, module) {
             load();
         });
         
+        plugin.on("cancel", function(e){
+            if (e.activePage.name == "automatic") {
+                // @todo fjakobs - cancel the installation
+            }
+            // @todo return to the dashboard
+        });
+        
         plugin.on("unload", function(){
+            
         });
         
         /***** Register and define API *****/
@@ -222,10 +214,7 @@ define(function(require, exports, module) {
          * Installer for Cloud9 IDE
          **/
         plugin.freezePublicAPI({
-            /**
-             * 
-             */
-            start : start
+            
         });
         
         register(null, {
