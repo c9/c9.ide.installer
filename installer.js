@@ -7,7 +7,8 @@ define(function(require, exports, module) {
         var Wizard     = imports.Wizard;
         var WizardPage = imports.WizardPage;
         var ui         = imports.ui;
-        var vfs        = imports.vfs;
+        
+        var Stream     = require("stream").Stream;
         
         /***** Initialization *****/
         
@@ -16,14 +17,16 @@ define(function(require, exports, module) {
         });
         // var emit   = plugin.getEmitter();
         
-        var logDiv, spinner, lastOutput;
+        var logDiv, spinner, lastOutput, vfs, pid;
         
         var loaded = false;
         function load(){
             if (loaded) return;
             loaded = true;
             
-            vfs.on("install", function(e){
+            imports.vfs.on("install", function(e){
+                vfs = e.vfs;
+                
                 plugin.once("finish", function(){
                     plugin.hide();
                     e.callback();
@@ -124,21 +127,59 @@ define(function(require, exports, module) {
             // Start Installation
             logln("Starting Installation...");
             
-            // @fjakobs push errors to this array if any
+            // Push any errors to this array
             var errors = [];
+            var path   = "~/.c9/install.sh";
             
-            // @todo: @fjakobs do your thing here
-            progress("Installing Nak...");
-            progress("Hello ", true);
-            progress("World.", true);
-            progress("Done.");
-            progress("Installing TMUX...");
-            progress("Goodbye ", true);
-            progress("Cruel ", true);
-            progress("World.", true);
-            progress("Done.");
-            
-            done();
+            require([options.installScript], function(data){
+                // Write File
+                var stream  = new Stream();
+                var options = { encoding: "utf8", stream: stream };
+                stream.readable = true;
+        
+                vfs.mkfile(path, options, function(err, meta) {
+                    if (err)
+                        return progress(err.message, null, true);
+                    
+                    var options = { 
+                        stdoutEncoding : "utf8",
+                        stderrEncoding : "utf8",
+                        stdinEncoding  : "utf8"
+                    };
+                    
+                    vfs.spawn(path, options, function(err, meta){
+                        var process = meta.process;
+                        
+                        var buffer = "";
+                        process.stdout.on("data", function(chunk){
+                            var idx = chunk.lastIndexOf("\n");
+                            if (idx != -1) {
+                                var meat = (buffer + chunk).substr(0, idx);
+                                meat.split("\n").forEach(function(line){
+                                    if (line.charAt(0) == ":")
+                                        progress(line.substr(1));
+                                    else
+                                        progress(line + "\n", true);
+                                });
+                                buffer = "";
+                            }
+                            
+                            buffer += idx == -1 ? chunk : chunk.substr(idx);
+                        });
+                        
+                        process.stderr.on("data", function(chunk){
+                            progress(chunk, true, true);
+                        });
+                        
+                        process.on("exit", function(){
+                            done();
+                        });
+                    });
+                });
+        
+                stream.emit("data", data);
+                stream.emit("end");
+            });
             
             function progress(message, output, error){
                 if (!message.trim()) return;
