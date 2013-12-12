@@ -9,6 +9,7 @@ define(function(require, exports, module) {
         var ui         = imports.ui;
         
         var Stream     = require("stream").Stream;
+        var async      = require("async");
         
         /***** Initialization *****/
         
@@ -18,6 +19,7 @@ define(function(require, exports, module) {
         // var emit   = plugin.getEmitter();
         
         var installScript = options.installScript;
+        var homeDir = options.homeDir;
         var logDiv, spinner, lastOutput, vfs, pid;
         
         var loaded = false;
@@ -30,7 +32,7 @@ define(function(require, exports, module) {
                 
                 plugin.once("finish", function(){
                     plugin.hide();
-                    e.callback();
+                    e.callback(true);
                 });
                 plugin.show(true);
             });
@@ -136,29 +138,28 @@ define(function(require, exports, module) {
             
             var path = "~/.c9/install.sh";
             
-            require(["text!" + installScript], function(data){
-                // Write File
-                var stream  = new Stream();
-                var options = { stream: stream }; //encoding: "utf8", 
-                stream.readable = true;
-        
-                vfs.mkfile(path, options, function(err, meta) {
-                    if (err) {
-                        progress(err.message, true, true);
-                        done();
-                        return;
-                    }
-                    
-                    // @todo fabian, I dont know why this is needed
-                    path = path.replace("~", "/Users/rubendaniels");
-                    
-                    vfs.execFile("chmod", { args: ["+x", path] }, function(err){
-                        if (err) {
-                            progress(err.message, true, true);
-                            done();
-                            return;
-                        }
+
+            require(["text!" + installScript], function(data) {
+                
+                async.series([
+                    function writeFile(next) {
+                        var stream  = new Stream();
+                        var options = {
+                            stream: stream,
+                            parents: true
+                        };
+                        stream.readable = true;
+                
+                        vfs.mkfile(path, options, next);
                         
+                        stream.emit("data", data);
+                        stream.emit("end");
+                    },
+                    function chmod(next) {
+                        path = path.replace("~", homeDir);
+                        vfs.execFile("chmod", { args: ["+x", path] }, next);
+                    },
+                    function spawn(next) {
                         var options = { 
                             stdoutEncoding : "utf8",
                             stderrEncoding : "utf8",
@@ -166,11 +167,7 @@ define(function(require, exports, module) {
                         };
                         
                         vfs.spawn(path, options, function(err, meta){
-                            if (err) {
-                                progress(err.message, true, true);
-                                done();
-                                return;
-                            }
+                            if (err) return next(err);
                             
                             var process = meta.process;
                             var buffer  = "";
@@ -195,17 +192,21 @@ define(function(require, exports, module) {
                             });
                             
                             process.on("exit", function(){
-                                done();
+                                next();
                             });
                             
                             pid = process.pid;
                         });
-                    })
-                    
+                    }
+                ], function(err) {
+                    if (err) {
+                        progress(err.message, true, true);
+                        done();
+                    }
+                    else {
+                        done();
+                    }
                 });
-        
-                stream.emit("data", data);
-                stream.emit("end");
             });
             
             function progress(message, output, error){
