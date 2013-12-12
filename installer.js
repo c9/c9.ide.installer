@@ -132,6 +132,7 @@ define(function(require, exports, module) {
             
             // Start Installation
             logln("Starting Installation...");
+            spinner.style.display = "block";
             
             var path = "~/.c9/install.sh";
             
