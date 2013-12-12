@@ -1,0 +1,1 @@
+../../scripts/initlocal.sh

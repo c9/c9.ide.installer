@@ -17,6 +17,7 @@ define(function(require, exports, module) {
         });
         // var emit   = plugin.getEmitter();
         
+        var installScript = options.installScript;
         var logDiv, spinner, lastOutput, vfs, pid;
         
         var loaded = false;
@@ -81,8 +82,6 @@ define(function(require, exports, module) {
                 //             + "try again.</div>";
                 //     }
                 // }, plugin);
-                
-                start();
             });
             
             // Page Manual - Explain the Manual Process (show terminal?) + Button to Retry
@@ -97,7 +96,14 @@ define(function(require, exports, module) {
                 var page = e.activePage;
                 if (page.name == "choice") {
                     var rb = page.container.querySelector("#auto");
-                    return rb.checked ? automatic : manual;
+                    
+                    if (rb.checked){
+                        setTimeout(start);
+                        return automatic;
+                    }
+                    else {
+                        return manual;
+                    }
                 }
             });
             
@@ -127,54 +133,74 @@ define(function(require, exports, module) {
             // Start Installation
             logln("Starting Installation...");
             
-            // Push any errors to this array
-            var errors = [];
-            var path   = "~/.c9/install.sh";
+            var path = "~/.c9/install.sh";
             
-            require([options.installScript], function(data){
+            require(["text!" + installScript], function(data){
                 // Write File
                 var stream  = new Stream();
-                var options = { encoding: "utf8", stream: stream };
+                var options = { stream: stream }; //encoding: "utf8", 
                 stream.readable = true;
         
                 vfs.mkfile(path, options, function(err, meta) {
-                    if (err)
-                        return progress(err.message, null, true);
+                    if (err) {
+                        progress(err.message, true, true);
+                        done();
+                        return;
+                    }
                     
-                    var options = { 
-                        stdoutEncoding : "utf8",
-                        stderrEncoding : "utf8",
-                        stdinEncoding  : "utf8"
-                    };
+                    // @todo fabian, I dont know why this is needed
+                    path = path.replace("~", "/Users/rubendaniels");
                     
-                    vfs.spawn(path, options, function(err, meta){
-                        var process = meta.process;
+                    vfs.execFile("chmod", { args: ["+x", path] }, function(err){
+                        if (err) {
+                            progress(err.message, true, true);
+                            done();
+                            return;
+                        }
                         
-                        var buffer = "";
-                        process.stdout.on("data", function(chunk){
-                            var idx = chunk.lastIndexOf("\n");
-                            if (idx != -1) {
-                                var meat = (buffer + chunk).substr(0, idx);
-                                meat.split("\n").forEach(function(line){
-                                    if (line.charAt(0) == ":")
-                                        progress(line.substr(1));
-                                    else
-                                        progress(line + "\n", true);
-                                });
-                                buffer = "";
+                        var options = { 
+                            stdoutEncoding : "utf8",
+                            stderrEncoding : "utf8",
+                            stdinEncoding  : "utf8"
+                        };
+                        
+                        vfs.spawn(path, options, function(err, meta){
+                            if (err) {
+                                progress(err.message, true, true);
+                                done();
+                                return;
                             }
                             
-                            buffer += idx == -1 ? chunk : chunk.substr(idx);
+                            var process = meta.process;
+                            var buffer  = "";
+                            process.stdout.on("data", function(chunk){
+                                var idx = chunk.lastIndexOf("\n");
+                                if (idx != -1) {
+                                    var meat = buffer + chunk.substr(0, idx);
+                                    meat.split("\n").forEach(function(line){
+                                        if (line.charAt(0) == ":")
+                                            progress(line.substr(1));
+                                        else
+                                            progress(line + "\n", true);
+                                    });
+                                    buffer = "";
+                                }
+                                
+                                buffer += idx == -1 ? chunk : chunk.substr(idx);
+                            });
+                            
+                            process.stderr.on("data", function(chunk){
+                                progress(chunk, true, true);
+                            });
+                            
+                            process.on("exit", function(){
+                                done();
+                            });
+                            
+                            pid = process.pid;
                         });
-                        
-                        process.stderr.on("data", function(chunk){
-                            progress(chunk, true, true);
-                        });
-                        
-                        process.on("exit", function(){
-                            done();
-                        });
-                    });
+                    })
+                    
                 });
         
                 stream.emit("data", data);
@@ -189,7 +215,7 @@ define(function(require, exports, module) {
                         lastOutput = logDiv.lastChild;
                     }
                     if (error)
-                        errors.push(error);
+                        message = "<span class='error'>" + message + "</span>";
                     log(message);
                 }
                 else {
@@ -204,27 +230,25 @@ define(function(require, exports, module) {
                 
                 plugin.showCancel = false;
                 
-                if (errors.length) {
-                    logln("<span class='error'>"
-                      + (errors.length == 1
-                        ? "An error occured. "
-                        : "There were " + errors.length + " errors. ")
-                      + "Please try to resolve " 
-                      + (errors.length == 1 ? "it" : "them")
-                      + " and restart cloud9 or contact support@c9.io.</span>");
-                      
-                    spinner.style.display = "none";
-                    
-                    plugin.update([
-                        { id: "previous", visible: true },
-                    ]);
-                }
-                else {
-                    logln("Done.");
-                    spinner.style.display = "none";
-                    
-                    plugin.showFinish = true;
-                }
+                vfs.stat("~/.c9/installed", {}, function(err, stat){
+                    if (err) {
+                        logln("<span class='error'>One or more errors occured. "
+                          + "Please try to resolve them and\n"
+                          + "restart cloud9 or contact support@c9.io.</span>");
+                          
+                        spinner.style.display = "none";
+                        logDiv.className = "log details";
+                        
+                        plugin.update([
+                            { id: "previous", visible: true },
+                        ]);
+                    }
+                    else {
+                        spinner.style.display = "none";
+                        
+                        plugin.showFinish = true;
+                    }
+                })
             }
         }
         
@@ -241,6 +265,9 @@ define(function(require, exports, module) {
         plugin.on("cancel", function(e){
             if (e.activePage.name == "automatic") {
                 // @todo fjakobs - cancel the installation
+                vfs.execFile("kill", { args: [pid] }, function(err){
+                    
+                });
             }
             // @todo return to the dashboard
         });
