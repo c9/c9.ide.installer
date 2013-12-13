@@ -236,7 +236,7 @@ define(function(require, exports, module) {
                     if (err) {
                         logln("<span class='error'>One or more errors occured. "
                           + "Please try to resolve them and\n"
-                          + "restart cloud9 or contact support@c9.io.</span>");
+                          + "restart Cloud9 or contact support@c9.io.</span>");
                           
                         spinner.style.display = "none";
                         logDiv.className = "log details";
