@@ -8,18 +8,13 @@ define(function(require, exports, module) {
         var WizardPage = imports.WizardPage;
         var ui         = imports.ui;
         
-        var Stream     = require("stream").Stream;
-        var async      = require("async");
-        
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
             title: "Installation Wizard"
         });
-        // var emit   = plugin.getEmitter();
         
         var installScript = options.installScript;
-        var homeDir = options.homeDir;
         var logDiv, spinner, lastOutput, vfs, pid;
         
         var loaded = false;
@@ -90,7 +85,9 @@ define(function(require, exports, module) {
             var manual = new WizardPage({ name: "manual", last: true });
             manual.on("draw", function(options){
                 ui.insertHtml(options.html, 
-                    require("text!./pages/manual.html"), manual);
+                    require("text!./pages/manual.html").replace("[%installScript%]", installScript), 
+                    manual
+                );
                 
             });
             
@@ -136,77 +133,47 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
-            var path = "~/.c9/install.sh";
+            var options = { 
+                stdoutEncoding : "utf8",
+                stderrEncoding : "utf8",
+                stdinEncoding  : "utf8",
+                args           : ["-c", "curl " + installScript + " | bash"]
+            };
             
-
-            require(["text!" + installScript], function(data) {
+            vfs.spawn("bash", options, function(err, meta){
+                if (err) {
+                    progress(err.message, true, true);
+                    done();
+                    return;
+                }
                 
-                async.series([
-                    function writeFile(next) {
-                        var stream  = new Stream();
-                        var options = {
-                            stream: stream,
-                            parents: true
-                        };
-                        stream.readable = true;
-                
-                        vfs.mkfile(path, options, next);
-                        
-                        stream.emit("data", data);
-                        stream.emit("end");
-                    },
-                    function chmod(next) {
-                        path = path.replace("~", homeDir);
-                        vfs.execFile("chmod", { args: ["+x", path] }, next);
-                    },
-                    function spawn(next) {
-                        var options = { 
-                            stdoutEncoding : "utf8",
-                            stderrEncoding : "utf8",
-                            stdinEncoding  : "utf8"
-                        };
-                        
-                        vfs.spawn(path, options, function(err, meta){
-                            if (err) return next(err);
-                            
-                            var process = meta.process;
-                            var buffer  = "";
-                            process.stdout.on("data", function(chunk){
-                                var idx = chunk.lastIndexOf("\n");
-                                if (idx != -1) {
-                                    var meat = buffer + chunk.substr(0, idx);
-                                    meat.split("\n").forEach(function(line){
-                                        if (line.charAt(0) == ":")
-                                            progress(line.substr(1));
-                                        else
-                                            progress(line + "\n", true);
-                                    });
-                                    buffer = "";
-                                }
-                                
-                                buffer += idx == -1 ? chunk : chunk.substr(idx);
-                            });
-                            
-                            process.stderr.on("data", function(chunk){
-                                progress(chunk, true, true);
-                            });
-                            
-                            process.on("exit", function(){
-                                next();
-                            });
-                            
-                            pid = process.pid;
+                var process = meta.process;
+                var buffer  = "";
+                process.stdout.on("data", function(chunk){
+                    var idx = chunk.lastIndexOf("\n");
+                    if (idx != -1) {
+                        var meat = buffer + chunk.substr(0, idx);
+                        meat.split("\n").forEach(function(line){
+                            if (line.charAt(0) == ":")
+                                progress(line.substr(1));
+                            else
+                                progress(line + "\n", true);
                         });
+                        buffer = "";
                     }
-                ], function(err) {
-                    if (err) {
-                        progress(err.message, true, true);
-                        done();
-                    }
-                    else {
-                        done();
-                    }
+                    
+                    buffer += idx == -1 ? chunk : chunk.substr(idx);
                 });
+                
+                process.stderr.on("data", function(chunk){
+                    progress(chunk, true, true);
+                });
+                
+                process.on("exit", function(){
+                    done();
+                });
+                
+                pid = process.pid;
             });
             
             function progress(message, output, error){
@@ -226,7 +193,7 @@ define(function(require, exports, module) {
                 }
             }
             
-            function done(){
+            function done() {
                 logDiv.style.paddingBottom = "60px";
                 logDiv.scrollTop = logDiv.scrollHeight;
                 
