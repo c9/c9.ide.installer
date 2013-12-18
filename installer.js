@@ -133,11 +133,12 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
+            var curl = "`which curl &>/dev/null && echo curl || echo wget -O -`";
             var options = { 
                 stdoutEncoding : "utf8",
                 stderrEncoding : "utf8",
                 stdinEncoding  : "utf8",
-                args           : ["-c", "curl " + installScript + " | bash"]
+                args           : ["-c", curl + " " + installScript + " | bash"]
             };
             
             vfs.spawn("bash", options, function(err, meta){
