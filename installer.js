@@ -22,6 +22,9 @@ define(function(require, exports, module) {
             if (loaded) return;
             loaded = true;
             
+            if (options.testing)
+                return plugin.show(true);
+            
             imports.vfs.on("install", function(e){
                 vfs = e.vfs;
                 
