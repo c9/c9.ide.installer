@@ -11,7 +11,7 @@ define(function(require, exports, module) {
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
-            title: "Installation Wizard"
+            title: "Cloud9 IDE Setup"
         });
         
         var installScript = options.installScript;

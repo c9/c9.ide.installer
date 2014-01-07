@@ -1,29 +1,25 @@
-<div class="page">
-    <h3>This installation wizard will set up Cloud9 IDE on your workspace</h3>
-    <p>
-        Cloud9 IDE has a set of dependencies that it needs to run on an SSH 
-        workspace. To prevent conflicts with different versions of the software 
-        already installed on your machine, we will install c9 dependencies in 
-        ~/.c9 folder regardless of what is already installed. To remove c9 from 
-        your machine simply remove the ~/.c9 folder and you're done.
-    </p>
-        
-    <p>We will install the following dependencies:</p>
-    
+<div class="page intro">
+    <h3>Can we quickly set up Cloud9 IDE on your workspace?</h3>
+    <p>Cloud9 IDE needs a few dependencies to be able to work with this SSH workspace.</p>
+
+    <p>If you agree, we’ll install just a few things in a ~/.c9 folder:</p>
+
     <ul>
-        <li>Node.js - Runs our agent</li>
-        <li>Tmux - Makes smart terminals</li>
-        <li>Pty.js - Needed for terminals as well</li>
-        <li>Nak - Does search and lists of files</li>
+        <li>Node.js - to run the Cloud9 basics</li>
+        <li>Tmux - provides smart terminals</li>
+        <li>Pty.js - more terminal dependencies</li>
+        <li>Nak - provides search & file listing</li>
     </ul>
-    
+    <p>This will not affect any other part of your system, it’s fully self-contained!</p>
+
+    <h4>How can I revert this later?</h4>
     <p>
-        You can choose to do this installation automatically or you
-        can run the installation script manually. This installation is required
-        to run Cloud9 IDE.
+        To fully remove Cloud9 IDE from your machine, all you need to do is 
+        remove the ~/.c9 folder! Nothing will be left over on your system.
     </p>
-    
-    <p>Would you like Cloud9 IDE to run the install script for you?</p>
+
+    <h4>Continue with the setup?</h4>
+    <p>Would you like us to do this automatically?</p>
     <ul class="choice">
         <li><input type="radio" name="choice" value="auto" id="auto" checked="1" /><label for="auto">Yes, please install it for me</label></li>
         <li><input type="radio" name="choice" value="manual" id="manual" /><label for="manual">No, I would like to do it manually</label></li>

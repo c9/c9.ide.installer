@@ -16,6 +16,13 @@
     margin: 0 0 4px 20px;
 }
 
+.intro h4{
+    margin-bottom : 0;
+}
+.intro p{
+    margin-top : 3px;
+}
+
 pre.code{
     background: rgb(196, 196, 196);
     padding: 10px;
