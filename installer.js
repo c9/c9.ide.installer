@@ -11,7 +11,7 @@ define(function(require, exports, module) {
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
-            title: "Cloud9 IDE Setup"
+            title: "Cloud9 Setup"
         });
         
         var installScript = options.installScript;
@@ -78,7 +78,7 @@ define(function(require, exports, module) {
                 // c9.on("stateChange", function(e){
                 //     if (!(e.state & c9.NETWORK)) {
                 //         spinner.innerHTML = "<div style='color:orange'>Lost network "
-                //             + "connection. Please restart Cloud9 IDE and "
+                //             + "connection. Please restart Cloud9 and "
                 //             + "try again.</div>";
                 //     }
                 // }, plugin);
@@ -252,7 +252,7 @@ define(function(require, exports, module) {
         /***** Register and define API *****/
         
         /**
-         * Installer for Cloud9 IDE
+         * Installer for Cloud9
          **/
         plugin.freezePublicAPI({
             
