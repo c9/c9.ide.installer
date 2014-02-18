@@ -136,7 +136,7 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
-            var curl = "`which curl &>/dev/null && echo curl || echo wget -O -`";
+            var curl = "`which curl &>/dev/null && echo curl -sSOL || echo wget -nc -O -`";
             var options = { 
                 stdoutEncoding : "utf8",
                 stderrEncoding : "utf8",
