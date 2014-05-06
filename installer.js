@@ -4,9 +4,9 @@ define(function(require, exports, module) {
     return main;
 
     function main(options, imports, register) {
-        var Wizard     = imports.Wizard;
+        var Wizard = imports.Wizard;
         var WizardPage = imports.WizardPage;
-        var ui         = imports.ui;
+        var ui = imports.ui;
         
         /***** Initialization *****/
         
@@ -25,7 +25,7 @@ define(function(require, exports, module) {
             if (options.testing)
                 return plugin.show(true);
             
-            imports.vfs.on("install", function(e){
+            imports.vfs.on("install", function(e) {
                 vfs = e.vfs;
                 
                 plugin.once("finish", function(){
@@ -45,7 +45,7 @@ define(function(require, exports, module) {
             
             // Page Choice - explain + choice manual vs automatic
             var choice = new WizardPage({ name: "choice" });
-            choice.on("draw", function(options){
+            choice.on("draw", function(options) {
                 ui.insertHtml(options.html, 
                     require("text!./pages/choice.html"), choice);
                 
@@ -53,12 +53,12 @@ define(function(require, exports, module) {
             
             // Page Automatic - Show Log Output & Checkbox
             var automatic = new WizardPage({ name: "automatic" });
-            automatic.on("draw", function(options){
+            automatic.on("draw", function(options) {
                 var div = options.html;
                 ui.insertHtml(div, require("text!./pages/automatic.html"), automatic);
                 
-                logDiv   = div.querySelector(".log");
-                spinner  = div.querySelector(".progress");
+                logDiv = div.querySelector(".log");
+                spinner = div.querySelector(".progress");
                 
                 var cb = div.querySelector("#details");
                 cb.addEventListener("click", function(){
@@ -75,7 +75,7 @@ define(function(require, exports, module) {
                     div.parentNode.removeChild(div);
                 });
                 
-                // c9.on("stateChange", function(e){
+                // c9.on("stateChange", function(e) {
                 //     if (!(e.state & c9.NETWORK)) {
                 //         spinner.innerHTML = "<div style='color:orange'>Lost network "
                 //             + "connection. Please restart Cloud9 and "
@@ -86,7 +86,7 @@ define(function(require, exports, module) {
             
             // Page Manual - Explain the Manual Process (show terminal?) + Button to Retry
             var manual = new WizardPage({ name: "manual", last: true });
-            manual.on("draw", function(options){
+            manual.on("draw", function(options) {
                 ui.insertHtml(options.html, 
                     require("text!./pages/manual.html").replace("[%installScript%]", installScript), 
                     manual
@@ -94,12 +94,12 @@ define(function(require, exports, module) {
                 
             });
             
-            plugin.on("next", function(e){
+            plugin.on("next", function(e) {
                 var page = e.activePage;
                 if (page.name == "choice") {
                     var rb = page.container.querySelector("#auto");
                     
-                    if (rb.checked){
+                    if (rb.checked) {
                         setTimeout(start);
                         return automatic;
                     }
@@ -109,22 +109,22 @@ define(function(require, exports, module) {
                 }
             });
             
-            plugin.startPage  = choice;
+            plugin.startPage = choice;
         }
         
         /***** Methods *****/
         
-        function log(msg){
+        function log(msg) {
             (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
             logDiv.scrollTop = logDiv.scrollHeight;
         }
         
-        function logln(msg){
+        function logln(msg) {
             logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
             logDiv.scrollTop = logDiv.scrollHeight;
         }
         
-        function start(services, callback){
+        function start(services, callback) {
             plugin.showCancel = true;
             
             plugin.update([
@@ -138,13 +138,13 @@ define(function(require, exports, module) {
             
             var curl = "`which curl &>/dev/null && echo curl -sSL || echo wget -nc -O -`";
             var options = { 
-                stdoutEncoding : "utf8",
-                stderrEncoding : "utf8",
-                stdinEncoding  : "utf8",
-                args           : ["-cx", curl + " " + installScript + " | bash"]
+                stdoutEncoding: "utf8",
+                stderrEncoding: "utf8",
+                stdinEncoding: "utf8",
+                args: ["-cx", curl + " " + installScript + " | bash"]
             };
             
-            vfs.spawn("bash", options, function(err, meta){
+            vfs.spawn("bash", options, function(err, meta) {
                 if (err) {
                     progress(err.message, true, true);
                     done();
@@ -152,12 +152,12 @@ define(function(require, exports, module) {
                 }
                 
                 var process = meta.process;
-                var buffer  = "";
-                process.stdout.on("data", function(chunk){
+                var buffer = "";
+                process.stdout.on("data", function(chunk) {
                     var idx = chunk.lastIndexOf("\n");
                     if (idx != -1) {
                         var meat = buffer + chunk.substr(0, idx);
-                        meat.split("\n").forEach(function(line){
+                        meat.split("\n").forEach(function(line) {
                             if (line.charAt(0) == ":")
                                 progress(line.substr(1));
                             else
@@ -169,7 +169,7 @@ define(function(require, exports, module) {
                     buffer += idx == -1 ? chunk : chunk.substr(idx);
                 });
                 
-                process.stderr.on("data", function(chunk){
+                process.stderr.on("data", function(chunk) {
                     progress(chunk, true, true);
                 });
                 
@@ -180,7 +180,7 @@ define(function(require, exports, module) {
                 pid = process.pid;
             });
             
-            function progress(message, output, error){
+            function progress(message, output, error) {
                 if (!message.trim()) return;
                 if (output) {
                     if (!lastOutput) {
@@ -203,7 +203,7 @@ define(function(require, exports, module) {
                 
                 plugin.showCancel = false;
                 
-                vfs.stat("~/.c9/installed", {}, function(err, stat){
+                vfs.stat("~/.c9/installed", {}, function(err, stat) {
                     if (err) {
                         logln("<span class='error'>One or more errors occured. "
                           + "Please try to resolve them and\n"
@@ -235,10 +235,10 @@ define(function(require, exports, module) {
             load();
         });
         
-        plugin.on("cancel", function(e){
+        plugin.on("cancel", function(e) {
             if (e.activePage.name == "automatic") {
                 // @todo fjakobs - cancel the installation
-                vfs.execFile("kill", { args: [pid] }, function(err){
+                vfs.execFile("kill", { args: [pid] }, function(err) {
                     
                 });
             }
