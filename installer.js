@@ -99,6 +99,8 @@ define(function(require, exports, module) {
                 if (page.name == "choice") {
                     var rb = page.container.querySelector("#auto");
                     
+                    plugin.resizable = rb.checked;
+                    
                     if (rb.checked) {
                         setTimeout(start);
                         return automatic;

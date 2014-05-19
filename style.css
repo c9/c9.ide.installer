@@ -35,9 +35,17 @@ pre.code{
     background : #272727;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    height : 250px;
-    position : relative;
+    /*height : 250px;*/
+    /*position : relative;*/
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -1px black;
+    
+    position: absolute;
+    top: 1px;
+    left: 0;
+    right: 0;
+    bottom: 46px;
+    height: inherit;
 }
 
 .installer .title {
