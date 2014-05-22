@@ -21,9 +21,6 @@ define(function(require, exports, module) {
             var skin = require("text!/static/plugins/c9.ide.layout.classic/skins.xml");
             ui.insertSkin({ data: skin }, plugin);
             
-            var css = require("text!/static/plugins/c9.ide.layout.classic/compile_dark.css");
-            ui.insertCss(css, false, plugin);
-            
             var css = require("text!/static/plugins/c9.ide.layout.classic/keyframes.css");
             css = css.replace(/@\{image-path\}/g, "/static/plugins/c9.ide.layout.classic/images")
             ui.insertCss(css, false, plugin);
