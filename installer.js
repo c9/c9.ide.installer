@@ -143,7 +143,7 @@ define(function(require, exports, module) {
                 stdoutEncoding: "utf8",
                 stderrEncoding: "utf8",
                 stdinEncoding: "utf8",
-                args: ["-cx", curl + " " + installScript + " | bash"]
+                args: ["-cx", curl + " -L " + installScript + " | bash"]
             };
             
             vfs.spawn("bash", options, function(err, meta) {
