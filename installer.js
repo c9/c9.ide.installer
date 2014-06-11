@@ -146,6 +146,8 @@ define(function(require, exports, module) {
                 args: ["-cx", curl + " -L " + installScript + " | bash"]
             };
             
+            if (!vfs) vfs = imports.vfs;
+            
             vfs.spawn("bash", options, function(err, meta) {
                 if (err) {
                     progress(err.message, true, true);
