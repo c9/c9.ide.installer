@@ -11,7 +11,8 @@ define(function(require, exports, module) {
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
-            title: "Cloud9 Setup"
+            title: "Cloud9 Setup",
+            allowClose: true
         });
         
         var installScript = options.installScript;
@@ -28,6 +29,7 @@ define(function(require, exports, module) {
             imports.vfs.on("install", function(e) {
                 vfs = e.vfs;
                 
+                plugin.allowClose = false;
                 plugin.once("finish", function(){
                     plugin.hide();
                     e.callback(true);
