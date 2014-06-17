@@ -96,6 +96,12 @@ define(function(require, exports, module) {
                 
             });
             
+            plugin.on("previous", function(e) {
+                var page = e.activePage;
+                if (page.name == "choice")
+                    plugin.width = 512;
+            });
+            
             plugin.on("next", function(e) {
                 var page = e.activePage;
                 if (page.name == "choice") {
@@ -105,9 +111,11 @@ define(function(require, exports, module) {
                     
                     if (rb.checked) {
                         setTimeout(start);
+                        plugin.width = 512;
                         return automatic;
                     }
                     else {
+                        plugin.width = 610;
                         return manual;
                     }
                 }
