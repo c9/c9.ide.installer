@@ -38,7 +38,7 @@ define(function(require, exports, module) {
          * Installer for Cloud9
          **/
         plugin.freezePublicAPI({
-            show: function(){}
+            show: function(){ alert("installer mock show called"); }
         });
         
         register(null, {
