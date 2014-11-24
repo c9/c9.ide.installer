@@ -29,16 +29,16 @@ pre.code{
     border-radius: 3px;
     font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, source-code-pro, monospace;
     border: 1px solid rgb(163, 163, 163);
+    font-size: 11px;
 }
 
 .installer{
-    background : #272727;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    background : @installer-background;
+    .font-smoothing(@installer-font-smoothing);
     /*height : 250px;*/
     /*position : relative;*/
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -1px black;
+    border-top: @installer-border-top;
+    box-shadow: @installer-box-shadow;
     
     position: absolute;
     top: 1px;
@@ -49,10 +49,10 @@ pre.code{
 }
 
 .installer .title {
-    color: rgb(182, 182, 182);
-    font-family: Arial;
+    color: @installer-color;
+    font-family: @installer-font-family;
     font-size: 20px;
-    text-shadow: 1px 1px 0 rgb(10, 10, 10);
+    text-shadow: @installer-text-shadow;
 }
 
 .installer .log{
@@ -64,20 +64,18 @@ pre.code{
     background : #153649;
     padding : 20px 20px 40px 20px;
     overflow : auto;
-    color : #fff;
+    color : @installer-log-color;
     line-height: 1.4em;
     font-family : Ubuntu Mono, Menlo, Consolas, monospace;
     font-size : 12px;
     margin : 0;
+    border-radius: @installer-log-border-radius;
     
-    background-image: -webkit-linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
-    background-image: -moz-linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
-    background-image: linear-gradient(top,rgba(0, 0, 0, 0.29) 0%, rgba(0, 0, 0, 0.11) 8px, rgba(0, 0, 0, 0.01) 13px, transparent 15px);
+    .gradient(~"@{installer-log-gradient}");
     
-    border : 1px solid white;
-    border-color : rgba(255,255,255,0.06) rgba(0,0,0,0.3) rgba(0,0,0,0.3) rgba(255,255,255,0.06);
-    box-shadow : 1px 0 0 rgba(255,255,255,0.06), 0 1px 0 rgba(255,255,255,0.06), 
-        -1px 0 0 rgba(0,0,0,0.3), 0 -1px 0 rgba(0,0,0,0.3);
+    border : @installer-log-border;
+    border-color : @installer-log-border-color;
+    box-shadow : @installer-log-box-shadow;
 }
 
 .installer .log .output{
@@ -103,7 +101,7 @@ pre.code{
 .installer .cb label{
     font-family: Arial;
     font-size: 12px;
-    color: #f1f1f1;
+    color: @installer-log-checkbox-color;
 }
 
 .installer .progress{
@@ -112,7 +110,7 @@ pre.code{
     bottom: 40px;
     font-family: arial;
     font-size: 12px;
-    color: white;
+    color: @installer-log-progress-color;
     padding-left: 20px;
 }
 .installer .progress span{
