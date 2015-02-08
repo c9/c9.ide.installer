@@ -9,16 +9,14 @@
         "url": "http://github.com/c9/c9.ide.installer.git"
     },
     "plugins": {
-        "plugin": {
-            "installer": {},
-            "installer_mock": {},
-            "layout": {}
-        }
+        "installer": {},
+        "installer_mock": {},
+        "layout": {}
     },
     "categories": [
         "core"
     ],
     "licenses": [
-        ""
+        "MIT"
     ]
 }
