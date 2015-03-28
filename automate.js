@@ -1,0 +1,190 @@
+define(function(require, exports, module) {
+    main.consumes = ["Plugin"];
+    main.provides = ["automate"];
+    return main;
+
+    function main(options, imports, register) {
+        var Plugin = imports.Plugin;
+        
+        var async = require("async");
+        
+        /***** Initialization *****/
+        
+        var plugin = new Plugin("Ajax.org", main.consumes);
+        // var emit = plugin.getEmitter();
+        
+        var namespaces = {};
+        
+        /***** Methods *****/
+        
+        function addCommand(ns, name, implementation) {
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            
+            namespaces[ns].commands[name] = implementation;
+        }
+        
+        function addCommandAlias(ns, name) {
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            
+            for (var i = 1; i < arguments.length; i++) {
+                namespaces[ns].alias[arguments[i]] = name;
+            }
+        }
+        
+        function getCommand(ns, name) {
+            var cmd = namespaces[ns].commands;
+            return cmd[name] || cmd[namespaces[ns].alias[name]];
+        }
+        
+        function createSession(ns) {
+            var session = new Plugin("Ajax.org", main.consumes);
+            var emit = plugin.getEmitter();
+            
+            var tasks = [];
+            var executing = false;
+            
+            function task(task, options, validate) {
+                if (executing) throw new Error("Adding tasks while executing");
+                
+                if (typeof options == "function" || options === undefined) {
+                    if (!validate) validate = options;
+                    options = {};
+                }
+                
+                Object.defineProperty(task, "$options", {
+                   enumerable: false,
+                   configurable: false,
+                   writable: false,
+                   value: options
+                });
+                
+                tasks.push(task);
+            }
+            
+            function execute(tasks, callback) {
+                var options = tasks.$options;
+                
+                // Loop over all tasks or sub-tasks when called recursively
+                async.eachSeries(tasks, function(task, next) {
+                    // The task consists of multiple tasks
+                    if (Array.isArray(task))
+                        return execute(task, next);
+                    
+                    if (!options)
+                        options = task.$options;
+                    
+                    // Loop over all competing tasks
+                    var found = false;
+                    async.eachSeries(Object.keys(task), function(type, next) {
+                        var command = getCommand(ns, type);
+                        command.isAvailable(function(available){
+                            if (!available) return next();
+                            
+                            // Loop over each of the tasks for this command
+                            async.eachSeries(task[type], function(item, next){
+                                command.execute(item, options, function(process){
+                                    emit("each", {
+                                        session: session,
+                                        task: task, 
+                                        process: process,
+                                        options: options, 
+                                        type: type, 
+                                        item: item
+                                    });
+                                }, function(err){
+                                    next(err);
+                                });
+                            }, function(err){
+                                next(err);
+                            });
+                        });
+                    }, function(err){
+                        if (err) return next(err);
+                        if (!found) {
+                            err = new Error("None of the available commands are available");
+                            err.code = "ENOTAVAILABLE";
+                            return next(err);
+                        }
+                        next();
+                    });
+                    
+                }, function(err){
+                    callback(err);
+                });
+            }
+            
+            function run(callback) {
+                emit("run");
+                
+                executing = true;
+                execute(tasks, function(){
+                    executing = false;
+                    callback.apply(this, arguments);
+                    session.unload();
+                    
+                    emit("stop");
+                });
+            }
+            
+            // Make session a baseclass to allow others to extend
+            session.baseclass();
+            
+            /**
+             * 
+             **/
+            session.freezePublicAPI({
+                /**
+                 * 
+                 */
+                get tasks(){ return tasks; },
+                
+                /**
+                 * 
+                 */
+                task: task,
+                
+                /**
+                 * 
+                 */
+                run: run
+            });
+            
+            return session;
+        }
+        
+        /***** Lifecycle *****/
+        
+        plugin.on("load", function() {
+            
+        });
+        plugin.on("unload", function() {
+            
+        });
+        
+        /***** Register and define API *****/
+        
+        /**
+         * 
+         **/
+        plugin.freezePublicAPI({
+            /**
+             * 
+             */
+            createSession: createSession,
+            
+            /**
+             * 
+             */
+            addCommand: addCommand,
+            
+            /**
+             * 
+             */
+            addCommandAlias: addCommandAlias
+        });
+        
+        register(null, {
+            automate: plugin
+        });
+    }
+});
