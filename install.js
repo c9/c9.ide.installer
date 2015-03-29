@@ -7,14 +7,17 @@ module.exports = function(session){
     session.install({
         "name": "Node.js", 
         "description": "Node.js v0.10.28" 
-    }, {
-        "tar.gz": [
-            { 
+    }, [
+        {
+            "tar.gz": { 
                 "url": "http://nodejs.org/dist/$NODE_VERSION/node-v0.10.28-$OS-$ARG.tar.gz",
                 "target": "~/.c9/node"
             }
-        ]
-    });
+        },
+        {
+            "bash": require("text!./install.sh")
+        }
+    ]);
 
     // "Requires" will check any required versions. There's also 
     // "version-greater", "version-lesser", which can be combined
@@ -44,14 +47,14 @@ module.exports = function(session){
     });
     
     // Will try to install tmux via apt-get, yum, etc (OR) and fall backs 
-    // on failure to a custom install script
+    // on failure to a bash install script
     session.install({
         "name": "tmux", 
         "description": "Tmux - the terminal multiplexer" 
     }, {
-        "ubuntu": ["tmux"],
-        "centos": ["tmux"],
-        "custom": require("text!./compile-tmux.sh")
+        "ubuntu": "tmux",
+        "centos": "tmux",
+        "bash": require("text!./compile-tmux.sh")
     });
 
     // Installation tasks are stacked (AND) by using an array as the 2nd
@@ -77,12 +80,10 @@ module.exports = function(session){
             ]
         },
         {
-            "symlink": [
-                {
+            "symlink": {
                     "source": "~/.c9/lib/sqlite3/sqlite3",
                     "target": "~/.c9/bin/sqlite3"
-                }
-            ]
+            }
         }
     ]);
 
@@ -93,7 +94,7 @@ module.exports = function(session){
         "cwd": "~/.c9",
         "optional": true
     }, {
-        "npm": ["https://github.com/c9/nak/tarball/c9"]
+        "npm": "https://github.com/c9/nak/tarball/c9"
     });
 
     // Show the installation screen

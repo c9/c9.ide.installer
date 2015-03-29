@@ -66,6 +66,24 @@ define(function(require, exports, module) {
                 require("./install.js"), callback);
         }
         
+        function addPackageManager(name, implementation){
+            automate.addCommand("installer", name, implementation);
+        }
+        
+        function removePackageManager(name) {
+            automate.removeCommand("installer", name);
+        }
+
+        // Add aliases to support a broader range of platforms
+        function addPackageManagerAlias(){
+            var args = ["installer"];
+            for (var i = 0; i < arguments.length; i++) {
+                args.push(arguments[i]);
+            }
+                
+            automate.addCommandAlias.apply(this, args);
+        }
+        
         function createSession(pluginName, pluginVersion, populateSession, callback) {
             if (!installed) {
                 return plugin.on("ready", 
@@ -168,11 +186,6 @@ define(function(require, exports, module) {
              */
             get installed(){ return installed; },
             
-            /**
-             * 
-             */
-            createSession: createSession,
-            
             _events: [
                 /**
                  * @event beforeStart
@@ -190,7 +203,27 @@ define(function(require, exports, module) {
                  * @event each
                  */
                 "each"
-            ]
+            ],
+            
+            /**
+             * 
+             */
+            createSession: createSession,
+            
+            /**
+             * 
+             */
+            addPackageManager: addPackageManager,
+            
+            /**
+             * 
+             */
+            removePackageManager: removePackageManager,
+            
+            /**
+             * 
+             */
+            addPackageManagerAlias: addPackageManagerAlias,
         });
         
         register(null, {

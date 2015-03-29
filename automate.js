@@ -23,6 +23,12 @@ define(function(require, exports, module) {
             namespaces[ns].commands[name] = implementation;
         }
         
+        function removeCommand(ns, name) {
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            
+            delete namespaces[ns].commands[name];
+        }
+        
         function addCommandAlias(ns, name) {
             if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
             
@@ -80,17 +86,21 @@ define(function(require, exports, module) {
                         command.isAvailable(function(available){
                             if (!available) return next();
                             
+                            var items = Array.isArray(task[type]) 
+                                ? task[type] : [task[type]];
+                            
                             // Loop over each of the tasks for this command
-                            async.eachSeries(task[type], function(item, next){
-                                command.execute(item, options, function(process){
-                                    emit("each", {
-                                        session: session,
-                                        task: task, 
-                                        process: process,
-                                        options: options, 
-                                        type: type, 
-                                        item: item
-                                    });
+                            async.eachSeries(items, function(item, next){
+                                emit("each", {
+                                    session: session,
+                                    task: task, 
+                                    options: options, 
+                                    type: type, 
+                                    item: item
+                                });
+                                
+                                command.execute(item, options, function(chunk, std, process){
+                                    emit("data", { data: chunk, std: std, process: process });
                                 }, function(err){
                                     next(err);
                                 });
@@ -176,6 +186,11 @@ define(function(require, exports, module) {
              * 
              */
             addCommand: addCommand,
+            
+            /**
+             * 
+             */
+            removeCommand: removeCommand,
             
             /**
              * 
