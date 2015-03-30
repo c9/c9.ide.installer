@@ -138,6 +138,10 @@ define(function(require, exports, module) {
                 });
             }
             
+            function abort(callback){
+                
+            }
+            
             // Make session a baseclass to allow others to extend
             session.baseclass();
             
@@ -153,12 +157,22 @@ define(function(require, exports, module) {
                 /**
                  * 
                  */
+                get executing(){ return executing; },
+                
+                /**
+                 * 
+                 */
                 task: task,
                 
                 /**
                  * 
                  */
-                run: run
+                run: run,
+                
+                /**
+                 * 
+                 */
+                abort: abort
             });
             
             return session;

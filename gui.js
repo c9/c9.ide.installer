@@ -10,6 +10,8 @@ define(function(require, exports, module) {
         var installer = imports.installer;
         var Datagrid = imports.Datagrid;
         
+        var async = require("async");
+        
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
@@ -17,7 +19,7 @@ define(function(require, exports, module) {
             allowClose: true
         });
         
-        var logDiv, spinner, lastOutput, datagrid;
+        var logDiv, spinner, lastOutput, datagrid, aborting;
         var intro, overview, execute, complete;
         var sessions = [];
         
@@ -29,6 +31,8 @@ define(function(require, exports, module) {
         }
         
         function beforeStart(e){
+            aborting = false;
+            
             var hasOptional = e.session.tasks.some(function(n){ 
                 return n.$options.optional;
             });
@@ -148,25 +152,38 @@ define(function(require, exports, module) {
             
             plugin.on("previous", function(e) {
                 var page = e.activePage;
-                if (page.name == "intro")
-                    plugin.width = 512;
+                // if (page.name == "intro")
+                //     plugin.width = 512;
             });
             
             plugin.on("next", function(e) {
                 var page = e.activePage;
                 if (page.name == "intro") {
                     plugin.resizable = true;
-                    plugin.width = 512;
+                    // plugin.width = 512;
                     return overview;
                 }
                 else if (page.name == "overview") {
-                    plugin.width = 610;
+                    // plugin.width = 610;
+                    setTimeout(start);
                     return execute;
                 }
                 else if (page.name == "execute") {
-                    plugin.width = 610;
-                    // setTimeout(start);
+                    // plugin.width = 610;
                     return complete;
+                }
+            });
+            
+            plugin.on("cancel", function(e) {
+                if (e.activePage.name == "automatic") {
+                    sessions.forEach(function(session){
+                        if (session.executing)
+                            session.abort(function(){
+                                aborting = true;
+                                plugin.gotoPage(complete);
+                                setCompleteMessage("Use aborted");
+                            });
+                    });
                 }
             });
             
@@ -204,6 +221,10 @@ define(function(require, exports, module) {
             datagrid.setRoot(root);
         }
         
+        function setCompleteMessage(msg){
+            complete.container.querySelector("blockquote").innerHTML = msg;
+        }
+        
         function log(msg) {
             (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
             logDiv.scrollTop = logDiv.scrollHeight;
@@ -226,50 +247,25 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
-            var curl = "`which curl &>/dev/null && echo curl -sSL || echo wget -nc -O -`";
-            var options = { 
-                stdoutEncoding: "utf8",
-                stderrEncoding: "utf8",
-                stdinEncoding: "utf8",
-                args: ["-cx", curl + " -L " + installScript + " | bash"]
-            };
+            var _sessions = sessions.slice(0); // copy sessions
             
-            if (!vfs) vfs = imports.vfs;
-            
-            vfs.spawn("bash", options, function(err, meta) {
-                if (err) {
-                    progress(err.message, true, true);
-                    done();
-                    return;
-                }
+            async.eachSeries(_sessions, function(session, next){
+                if (aborting) return next();
                 
-                var process = meta.process;
-                var buffer = "";
-                process.stdout.on("data", function(chunk) {
-                    var idx = chunk.lastIndexOf("\n");
-                    if (idx != -1) {
-                        var meat = buffer + chunk.substr(0, idx);
-                        meat.split("\n").forEach(function(line) {
-                            if (line.charAt(0) == ":")
-                                progress(line.substr(1));
-                            else
-                                progress(line + "\n", true);
-                        });
-                        buffer = "";
-                    }
+                session.on("each", function(e){
+                    logln("Installing " + e.session.package.name 
+                        + " " + e.session.package.version);
+                });
+                session.on("data", function(e){
+                    log(e.data);
                     
-                    buffer += idx == -1 ? chunk : chunk.substr(idx);
+                    // @TODO detect password: input
                 });
                 
-                process.stderr.on("data", function(chunk) {
-                    progress(chunk, true, true);
-                });
-                
-                process.on("exit", function(){
-                    done();
-                });
-                
-                pid = process.pid;
+                session.run(next);
+            }, function(err){
+                if (err) 
+                    return progress(err.message, true, true);
             });
             
             function progress(message, output, error) {
@@ -295,25 +291,25 @@ define(function(require, exports, module) {
                 
                 plugin.showCancel = false;
                 
-                vfs.stat("~/.c9/installed", {}, function(err, stat) {
-                    if (err) {
-                        logln("<span class='error'>One or more errors occured. "
-                          + "Please try to resolve them and\n"
-                          + "restart Cloud9 or contact support@c9.io.</span>");
+                // vfs.stat("~/.c9/installed", {}, function(err, stat) {
+                //     if (err) {
+                //         logln("<span class='error'>One or more errors occured. "
+                //           + "Please try to resolve them and\n"
+                //           + "restart Cloud9 or contact support@c9.io.</span>");
                           
-                        spinner.style.display = "none";
-                        logDiv.className = "log details";
+                //         spinner.style.display = "none";
+                //         logDiv.className = "log details";
                         
-                        plugin.update([
-                            { id: "previous", visible: true },
-                        ]);
-                    }
-                    else {
-                        spinner.style.display = "none";
+                //         plugin.update([
+                //             { id: "previous", visible: true },
+                //         ]);
+                //     }
+                //     else {
+                //         spinner.style.display = "none";
                         
-                        plugin.showFinish = true;
-                    }
-                });
+                //         plugin.showFinish = true;
+                //     }
+                // });
             }
         }
         
@@ -325,16 +321,6 @@ define(function(require, exports, module) {
         
         plugin.on("load", function(){
             load();
-        });
-        
-        plugin.on("cancel", function(e) {
-            if (e.activePage.name == "automatic") {
-                // @todo fjakobs - cancel the installation
-                vfs.execFile("kill", { args: [pid] }, function(err) {
-                    
-                });
-            }
-            // @todo return to the dashboard
         });
         
         plugin.on("unload", function(){
