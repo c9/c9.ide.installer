@@ -38,13 +38,15 @@ define(function(require, exports, module) {
         }
         
         function getCommand(ns, name) {
+            if (!namespaces[ns]) throw new Error("Unknown namespace: " + ns);
+            
             var cmd = namespaces[ns].commands;
             return cmd[name] || cmd[namespaces[ns].alias[name]];
         }
         
         function createSession(ns) {
             var session = new Plugin("Ajax.org", main.consumes);
-            var emit = plugin.getEmitter();
+            var emit = session.getEmitter();
             
             var tasks = [];
             var executing = false;

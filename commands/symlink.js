@@ -36,6 +36,10 @@ define(function(require, exports, module) {
             });
         }
         
+        function isAvailable(callback){
+            callback(true);
+        }
+        
         plugin.on("load", function() {
             installer.addPackageManager("symlink", plugin);
         });
@@ -43,7 +47,7 @@ define(function(require, exports, module) {
             installer.removePackageManager("symlink");
         });
         
-        plugin.freezePublicAPI({ execute: execute });
+        plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
         register(null, {
             "installer.symlink": plugin

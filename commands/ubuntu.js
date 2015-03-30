@@ -41,15 +41,29 @@ define(function(require, exports, module) {
             });
         }
         
+        var available;
+        function isAvailable(callback){
+            if (typeof available != "undefined")
+                return callback(available);
+            
+            proc.execFile("which", { args: ["apt-get"] }, function(err, stdout){
+                if (err) return callback(false);
+                
+                available = stdout.length > 0;
+                callback(available);
+            });
+        }
+        
         plugin.on("load", function() {
             installer.addPackageManager("ubuntu", plugin);
             installer.addPackageManagerAlias("ubuntu", "debian");
         });
         plugin.on("unload", function() {
             installer.removePackageManager("ubuntu");
+            available = undefined;
         });
         
-        plugin.freezePublicAPI({ execute: execute });
+        plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
         register(null, {
             "installer.ubuntu": plugin

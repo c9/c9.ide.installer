@@ -45,6 +45,10 @@ define(function(require, exports, module) {
             });
         }
         
+        function isAvailable(callback){
+            callback(true);
+        }
+        
         plugin.on("load", function() {
             installer.addPackageManager("npm", plugin);
         });
@@ -52,7 +56,7 @@ define(function(require, exports, module) {
             installer.removePackageManager("npm");
         });
         
-        plugin.freezePublicAPI({ execute: execute });
+        plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
         register(null, {
             "installer.npm": plugin

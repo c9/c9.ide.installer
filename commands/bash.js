@@ -42,7 +42,10 @@ define(function(require, exports, module) {
                     else callback(new Error("Failed. Exit code " + code));
                 });
             });
-            
+        }
+        
+        function isAvailable(callback){
+            callback(true);
         }
         
         plugin.on("load", function() {
@@ -52,7 +55,7 @@ define(function(require, exports, module) {
             installer.removePackageManager("bash");
         });
         
-        plugin.freezePublicAPI({ execute: execute });
+        plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
         register(null, {
             "installer.bash": plugin

@@ -1,12 +1,14 @@
 define(function(require, exports, module) {
-    main.consumes = ["Wizard", "WizardPage", "ui", "vfs"];
-    main.provides = ["installer"];
+    main.consumes = ["Wizard", "WizardPage", "ui", "installer", "Datagrid"];
+    main.provides = ["installer.gui"];
     return main;
 
     function main(options, imports, register) {
         var Wizard = imports.Wizard;
         var WizardPage = imports.WizardPage;
         var ui = imports.ui;
+        var installer = imports.installer;
+        var Datagrid = imports.Datagrid;
         
         /***** Initialization *****/
         
@@ -15,29 +17,109 @@ define(function(require, exports, module) {
             allowClose: true
         });
         
-        var logDiv, spinner, lastOutput, vfs, pid;
+        var logDiv, spinner, lastOutput, datagrid;
+        var intro, overview, execute, complete;
+        var sessions = [];
         
         function load(){
             if (options.testing)
                 return plugin.show(true);
+            
+            installer.on("beforeStart", beforeStart, plugin);
         }
         
-        function draw(){
-            ui.insertCss(require("text!./style.css"), plugin);
-            
-            // Page Choice - explain + choice manual vs automatic
-            var choice = new WizardPage({ name: "choice" });
-            choice.on("draw", function(options) {
-                ui.insertHtml(options.html, 
-                    require("text!./pages/choice.html"), choice);
-                
+        function beforeStart(e){
+            var hasOptional = e.session.tasks.some(function(n){ 
+                return n.$options.optional;
             });
             
-            // Page Automatic - Show Log Output & Checkbox
-            var automatic = new WizardPage({ name: "automatic" });
-            automatic.on("draw", function(options) {
-                var div = options.html;
-                ui.insertHtml(div, require("text!./pages/automatic.html"), automatic);
+            if (e.session.introduction || hasOptional) {
+                draw();
+                
+                if (!plugin.visible) {
+                    sessions.push(e.session);
+                    
+                    plugin.startPage = e.session.introduction ? intro : overview;
+                    plugin.show(true, { queue: false });
+                }
+                else {
+                    if (plugin.startPage == plugin.activePage) {
+                        if (e.session.introduction) {
+                            if (plugin.activePage != intro)
+                                plugin.previous();
+                            
+                            updateIntro();
+                        }
+                        
+                        updatePackages();
+                    }
+                    else {
+                        plugin.once("hide", function(){
+                            beforeStart(e);
+                        });
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        var drawn;
+        function draw(){
+            if (drawn) return;
+            drawn = true;
+            
+            ui.insertCss(require("text!./style.css"), plugin);
+            
+            // Page Intro - displays intro texts
+            intro = new WizardPage({ name: "intro" }, plugin);
+            intro.on("draw", function(e) {
+                ui.insertHtml(e.html, 
+                    require("text!./pages/intro.html"), intro);
+            });
+            intro.on("show", function(){
+                updateIntro();
+            })
+            
+            // Page Overview - givs an overview of the components to install
+            overview = new WizardPage({ name: "overview" }, plugin);
+            overview.on("draw", function(e) {
+                ui.insertHtml(e.html, 
+                    require("text!./pages/overview.html"), overview);
+                
+                datagrid = new Datagrid({
+                    container: e.html.querySelector("blockquote"),
+                    
+                    columns : [
+                        {
+                            caption: "Name",
+                            value: "name",
+                            width: "35%",
+                            type: "tree"
+                        }, 
+                        {
+                            caption: "Description",
+                            value: "description",
+                            width: "65%"
+                        }
+                    ],
+                
+                    // getIconHTML: function(node) {
+                    //     var icon = node.isFolder ? "folder" : "default";
+                    //     if (node.status === "loading") icon = "loading";
+                    //     return "<span class='ace_tree-icon " + icon + "'></span>";
+                    // }
+                }, plugin);
+            });
+            overview.on("show", function(){
+                updatePackages();
+            });
+            
+            // Page Execute - Show Log Output & Checkbox
+            execute = new WizardPage({ name: "execute" }, plugin);
+            execute.on("draw", function(e) {
+                var div = e.html;
+                ui.insertHtml(div, require("text!./pages/execute.html"), execute);
                 
                 logDiv = div.querySelector(".log");
                 spinner = div.querySelector(".progress");
@@ -56,55 +138,71 @@ define(function(require, exports, module) {
                     div.innerHTML = "";
                     div.parentNode.removeChild(div);
                 });
-                
-                // c9.on("stateChange", function(e) {
-                //     if (!(e.state & c9.NETWORK)) {
-                //         spinner.innerHTML = "<div style='color:orange'>Lost network "
-                //             + "connection. Please restart Cloud9 and "
-                //             + "try again.</div>";
-                //     }
-                // }, plugin);
             });
             
-            // Page Manual - Explain the Manual Process (show terminal?) + Button to Retry
-            var manual = new WizardPage({ name: "manual", last: true });
-            manual.on("draw", function(options) {
-                ui.insertHtml(options.html, 
-                    require("text!./pages/manual.html").replace("[%installScript%]", installScript), 
-                    manual
-                );
-                
+            // Page Complete - The installer has finished
+            complete = new WizardPage({ name: "complete", last: true }, plugin);
+            complete.on("draw", function(e) {
+                ui.insertHtml(e.html, require("text!./pages/complete.html"), complete);
             });
             
             plugin.on("previous", function(e) {
                 var page = e.activePage;
-                if (page.name == "choice")
+                if (page.name == "intro")
                     plugin.width = 512;
             });
             
             plugin.on("next", function(e) {
                 var page = e.activePage;
-                if (page.name == "choice") {
-                    var rb = page.container.querySelector("#auto");
-                    
-                    plugin.resizable = rb.checked;
-                    
-                    if (rb.checked) {
-                        setTimeout(start);
-                        plugin.width = 512;
-                        return automatic;
-                    }
-                    else {
-                        plugin.width = 610;
-                        return manual;
-                    }
+                if (page.name == "intro") {
+                    plugin.resizable = true;
+                    plugin.width = 512;
+                    return overview;
+                }
+                else if (page.name == "overview") {
+                    plugin.width = 610;
+                    return execute;
+                }
+                else if (page.name == "execute") {
+                    plugin.width = 610;
+                    // setTimeout(start);
+                    return complete;
                 }
             });
             
-            plugin.startPage = choice;
+            plugin.startPage = intro;
         }
         
         /***** Methods *****/
+        
+        function updateIntro(){
+            var html = "";
+            
+            sessions.forEach(function(session){
+                html += session.introduction || "";
+            });
+            intro.container.querySelector("blockquote").innerHTML = html;
+        }
+        
+        function updatePackages(){
+            var root = { items: [] };
+            
+            sessions.forEach(function(session){
+                var node = { 
+                    label: session.package.name, 
+                    description: "Version " + session.package.version,
+                    items: []
+                };
+                root.items.push(node);
+                
+                session.tasks.forEach(function(task){
+                    if (task.$options)
+                        node.items.push(task.$options);
+                });
+            });
+            
+            datagrid.setRoot(root);
+        }
         
         function log(msg) {
             (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
@@ -240,7 +338,15 @@ define(function(require, exports, module) {
         });
         
         plugin.on("unload", function(){
-            
+            logDiv = null;
+            spinner = null;
+            lastOutput = null;
+            intro = null;
+            overview = null;
+            execute = null;
+            complete = null;
+            drawn = null;
+            datagrid = null;
         });
         
         /***** Register and define API *****/
@@ -253,7 +359,7 @@ define(function(require, exports, module) {
         });
         
         register(null, {
-            installer: plugin
+            "installer.gui": plugin
         });
     }
 });

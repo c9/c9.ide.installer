@@ -10,8 +10,8 @@
     },
     "plugins": {
         "installer": {},
-        "installer_mock": {},
-        "layout": {}
+        "automate": {},
+        "gui": {}
     },
     "categories": [
         "core"

@@ -1,11 +1,12 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin", "automate", "vfs"];
+    main.consumes = ["Plugin", "automate", "vfs", "c9"];
     main.provides = ["installer"];
     return main;
 
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
         var automate = imports.automate;
+        var c9 = imports.c9;
         var vfs;
         
         /***** Initialization *****/
@@ -13,7 +14,7 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         var emit = plugin.getEmitter();
         
-        var NAMESPACE = "install";
+        var NAMESPACE = "installer";
         var installSelfCheck = options.installSelfCheck;
         var installChecked = false;
         
@@ -35,8 +36,8 @@ define(function(require, exports, module) {
                 // });
                 // plugin.show(true);
                 
-                vfs.readFile(options.installPath + "/installed", {}, function(err, data) {
-                    data.split("\n").forEach(function(line){
+                vfs.readfile(options.installPath + "/installed", {}, function(err, data) {
+                    (data || "").split("\n").forEach(function(line){
                         var p = line.split("@");
                         installed[p[0]] = p[1];
                     });
@@ -62,21 +63,21 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function selfInstall(callback) {
-            createSession("installer", "1.0.0", 
+            createSession("c9.ide.installer", "1.0.0", 
                 require("./install.js"), callback);
         }
         
         function addPackageManager(name, implementation){
-            automate.addCommand("installer", name, implementation);
+            automate.addCommand(NAMESPACE, name, implementation);
         }
         
         function removePackageManager(name) {
-            automate.removeCommand("installer", name);
+            automate.removeCommand(NAMESPACE, name);
         }
 
         // Add aliases to support a broader range of platforms
         function addPackageManagerAlias(){
-            var args = ["installer"];
+            var args = [NAMESPACE];
             for (var i = 0; i < arguments.length; i++) {
                 args.push(arguments[i]);
             }
@@ -84,13 +85,13 @@ define(function(require, exports, module) {
             automate.addCommandAlias.apply(this, args);
         }
         
-        function createSession(pluginName, pluginVersion, populateSession, callback) {
+        function createSession(packageName, packageVersion, populateSession, callback) {
             if (!installed) {
                 return plugin.on("ready", 
-                    createSession.bind(this, pluginName, pluginVersion, install, callback));
+                    createSession.bind(this, packageName, packageVersion, install, callback));
             }
             
-            if (installed[pluginName] == pluginVersion)
+            if (installed[packageName] == packageVersion)
                 return callback();
             
             var session = automate.createSession(NAMESPACE);
@@ -107,9 +108,17 @@ define(function(require, exports, module) {
                 add(task, options, validate);
             }
             
-            function start(callback) {
-                if (emit("beforeStart", { session: session }) !== false)
+            function start(callback, force) {
+                if (force || emit("beforeStart", { session: session }) !== false) {
+                    // Pre script
+                    if (pre) session.tasks.unshift({ "bash": pre });
+                    
+                    // Post script
+                    if (post) session.tasks.push({ "bash": post });
+                    
+                    // Start installation
                     session.run(callback);
+                }
             }
             
             session.on("run", function(){
@@ -125,6 +134,14 @@ define(function(require, exports, module) {
             
             var intro, pre, post;
             session.freezePublicAPI({
+                /**
+                 * 
+                 */
+                package: {
+                    name: packageName,
+                    version: packageVersion
+                },
+                
                 /**
                  * 
                  */
@@ -158,7 +175,10 @@ define(function(require, exports, module) {
             
             sessions.push(session);
             
-            populateSession(session);
+            populateSession(session, {
+                platform: c9.platform,
+                arch: c9.arch
+            });
         }
         
         /***** Lifecycle *****/

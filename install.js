@@ -1,21 +1,30 @@
 define(function(require, exports, module) {
     
-module.exports = function(session){
-    session.introduction = require("text!./intro.html");
+// Node.js - to run the Cloud9 basics
+// Tmux - provides smart terminals
+// Pty.js - more terminal dependencies
+// Nak - provides search & file listing
+    
+module.exports = function(session, options){
+    session.introduction = require("text!./install.intro.html");
+
+    var NODEVERSION = "v0.10.28";
 
     // Node.js
     session.install({
         "name": "Node.js", 
-        "description": "Node.js v0.10.28" 
+        "description": "Node.js " + NODEVERSION 
     }, [
         {
             "tar.gz": { 
-                "url": "http://nodejs.org/dist/$NODE_VERSION/node-v0.10.28-$OS-$ARG.tar.gz",
+                "url": "http://nodejs.org/dist/$NODE_VERSION/node-" 
+                    + NODEVERSION + "-" + options.platform + "-" 
+                    + options.arch + ".tar.gz",
                 "target": "~/.c9/node"
             }
         },
         {
-            "bash": require("text!./install.sh")
+            "bash": require("text!./install.node.sh")
         }
     ]);
 
@@ -54,7 +63,7 @@ module.exports = function(session){
     }, {
         "ubuntu": "tmux",
         "centos": "tmux",
-        "bash": require("text!./compile-tmux.sh")
+        "bash": require("text!./install.tmux.sh")
     });
 
     // Installation tasks are stacked (AND) by using an array as the 2nd
