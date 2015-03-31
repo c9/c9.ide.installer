@@ -40,12 +40,12 @@ define(function(require, exports, module) {
                 return n.$options.optional;
             });
             
+            sessions.push(e.session);
+            
             if (e.session.introduction || hasOptional) {
                 draw();
                 
                 if (!plugin.visible) {
-                    sessions.push(e.session);
-                    
                     plugin.startPage = e.session.introduction ? intro : overview;
                     plugin.show(true, { queue: false });
                 }
@@ -61,11 +61,18 @@ define(function(require, exports, module) {
                         updatePackages();
                     }
                     else {
+                        sessions.remove(e.session);
+                        
                         plugin.once("hide", function(){
                             beforeStart(e);
                         });
+                        
+                        return;
                     }
                 }
+            }
+            else if (plugin.visible) {
+                updatePackages();
             }
             
             return false;
@@ -96,6 +103,7 @@ define(function(require, exports, module) {
                 
                 datagrid = new Datagrid({
                     container: e.html.querySelector("blockquote"),
+                    enableCheckboxes: true,
                     
                     columns : [
                         {
@@ -110,6 +118,10 @@ define(function(require, exports, module) {
                             width: "65%"
                         }
                     ],
+                    
+                    getClassName: function(node){
+                        return !node.optional ? "required" : "";
+                    }
                 
                     // getIconHTML: function(node) {
                     //     var icon = node.isFolder ? "folder" : "default";
@@ -117,6 +129,50 @@ define(function(require, exports, module) {
                     //     return "<span class='ace_tree-icon " + icon + "'></span>";
                     // }
                 }, plugin);
+                
+                function updateParents(nodes){
+                    var parents = {}, toChildren = {};
+                    nodes.forEach(function(n){ 
+                        if (!n.parent.label) { // Root
+                            toChildren[n.label] = true;
+                            parents[n.label] = n;
+                        }
+                        else if (!n.optional)
+                            n.isChecked = true;
+                        else
+                            parents[n.parent.label] = n.parent;
+                    });
+                    
+                    Object.keys(parents).forEach(function(label){
+                        var parent = parents[label];
+                        
+                        if (toChildren[label]) {
+                            var all = true;
+                            var hasUnchecked = parent.items.some(function(n){ return !n.isChecked });
+                            if (hasUnchecked) parent.isChecked = true;
+                            
+                            parent.items.forEach(function(n){
+                                if (!n.optional) all = false;
+                                else n.isChecked = parent.isChecked ? true : false;
+                            });
+                            if (!all && !parent.isChecked)
+                                parent.isChecked = -1;
+                            return;
+                        }
+                        
+                        var state = 0;
+                        parent.items.forEach(function(n){
+                            if (n.isChecked) state++;
+                        });
+                        if (state == parent.items.length)
+                            parent.isChecked = true;
+                        else
+                            parent.isChecked = state ? -1 : false;
+                    });
+                }
+                
+                datagrid.on("check", updateParents);
+                datagrid.on("uncheck", updateParents);
             });
             overview.on("show", function(){
                 updatePackages();
@@ -148,30 +204,29 @@ define(function(require, exports, module) {
             });
             
             // Page Complete - The installer has finished
-            complete = new WizardPage({ name: "complete", last: true }, plugin);
+            complete = new WizardPage({ name: "complete" }, plugin);
             complete.on("draw", function(e) {
                 ui.insertHtml(e.html, require("text!./pages/complete.html"), complete);
+                setCompleteMessage();
             });
             
-            plugin.on("previous", function(e) {
-                var page = e.activePage;
-                // if (page.name == "intro")
-                //     plugin.width = 512;
-            });
+            // plugin.on("previous", function(e) {
+            //     var page = e.activePage;
+            // });
             
             plugin.on("next", function(e) {
                 var page = e.activePage;
                 if (page.name == "intro") {
-                    // plugin.width = 512;
                     return overview;
                 }
                 else if (page.name == "overview") {
-                    // plugin.width = 610;
                     setTimeout(start);
                     return execute;
                 }
                 else if (page.name == "execute") {
-                    // plugin.width = 610;
+                    plugin.showFinish = true;
+                    plugin.showPrevious = false;
+                    plugin.showNext = false;
                     return complete;
                 }
             });
@@ -183,7 +238,8 @@ define(function(require, exports, module) {
                             session.abort(function(){
                                 aborting = true;
                                 plugin.gotoPage(complete);
-                                setCompleteMessage("Use aborted");
+                                setCompleteMessage("Installation Aborted",
+                                    require("text!./install.aborted.html"));
                             });
                     });
                 }
@@ -204,27 +260,44 @@ define(function(require, exports, module) {
         }
         
         function updatePackages(){
+            if (!datagrid) return;
+            
             var root = { items: [] };
             
             sessions.forEach(function(session){
                 var node = { 
                     label: session.package.name, 
                     description: "Version " + session.package.version,
-                    items: []
+                    items: [],
+                    isOpen: true,
+                    isChecked: true
                 };
                 root.items.push(node);
                 
+                var optional = false;
                 session.tasks.forEach(function(task){
-                    if (task.$options)
+                    if (task.$options) {
+                        if (task.$options.isChecked === undefined)
+                            task.$options.isChecked = true;
                         node.items.push(task.$options);
+                        if (task.$options.optional)
+                            optional = true;
+                    }
                 });
+                
+                node.optional = optional;
             });
             
             datagrid.setRoot(root);
         }
         
-        function setCompleteMessage(msg){
-            complete.container.querySelector("blockquote").innerHTML = msg;
+        var lastComplete;
+        function setCompleteMessage(title, msg){
+            if (!complete.container)
+                return (lastComplete = [title, msg]);
+                
+            complete.container.querySelector("h3").innerHTML = title || lastComplete[0];
+            complete.container.querySelector("blockquote").innerHTML = msg || lastComplete[1];
         }
         
         function log(msg) {
@@ -240,10 +313,8 @@ define(function(require, exports, module) {
         function start(services, callback) {
             plugin.showCancel = true;
             
-            plugin.update([
-                { id: "previous", visible: false },
-                { id: "next", visible: false }
-            ]);
+            plugin.showPrevious = false;
+            plugin.showNext = false;
             
             // Start Installation
             logln("Starting Installation...");
@@ -254,9 +325,17 @@ define(function(require, exports, module) {
             async.eachSeries(_sessions, function(session, next){
                 if (aborting) return next();
                 
+                session.on("run", function(){
+                    logln("Package " + session.package.name 
+                        + " " + session.package.version);
+                });
+                
+                var lastOptions;
                 session.on("each", function(e){
-                    logln("Installing " + e.session.package.name 
-                        + " " + e.session.package.version);
+                    if (lastOptions != e.options) {
+                        lastOptions = e.options;
+                        logln("Installing " + e.options.name);
+                    }
                 });
                 session.on("data", function(e){
                     log(e.data);
@@ -264,10 +343,12 @@ define(function(require, exports, module) {
                     // @TODO detect password: input
                 });
                 
-                session.run(next);
+                session.start(next, true);
             }, function(err){
-                if (err) 
-                    return progress(err.message, true, true);
+                // if (err) 
+                //     return log("ERROR: " + err.message); //progress(err.message, true, true);
+                
+                done(err);
             });
             
             function progress(message, output, error) {
@@ -287,31 +368,32 @@ define(function(require, exports, module) {
                 }
             }
             
-            function done() {
-                logDiv.style.paddingBottom = "60px";
+            function done(err) {
+                // logDiv.style.paddingBottom = "60px";
                 logDiv.scrollTop = logDiv.scrollHeight;
                 
                 plugin.showCancel = false;
                 
-                // vfs.stat("~/.c9/installed", {}, function(err, stat) {
-                //     if (err) {
-                //         logln("<span class='error'>One or more errors occured. "
-                //           + "Please try to resolve them and\n"
-                //           + "restart Cloud9 or contact support@c9.io.</span>");
-                          
-                //         spinner.style.display = "none";
-                //         logDiv.className = "log details";
-                        
-                //         plugin.update([
-                //             { id: "previous", visible: true },
-                //         ]);
-                //     }
-                //     else {
-                //         spinner.style.display = "none";
-                        
-                //         plugin.showFinish = true;
-                //     }
-                // });
+                if (err) {
+                    logln("<span class='error'>One or more errors occured. "
+                      + "Please try to resolve them and\n"
+                      + "restart Cloud9 or contact support@c9.io."
+                      + err.message + "</span>");
+                      
+                    spinner.style.display = "none";
+                    logDiv.className = "log details";
+                    
+                    plugin.showPrevious = true;
+                }
+                else {
+                    spinner.style.display = "none";
+                    
+                    setCompleteMessage("Installation Complete",
+                        require("text!./install.success.html").replace("{{sessions}}", _sessions.map(function(s){
+                            return s.package.name + " " + s.package.version;
+                        }).join("</li><li>")));
+                    plugin.showNext = true;
+                }
             }
         }
         
@@ -335,6 +417,7 @@ define(function(require, exports, module) {
             complete = null;
             drawn = null;
             datagrid = null;
+            lastComplete = null;
         });
         
         /***** Register and define API *****/

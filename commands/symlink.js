@@ -24,12 +24,12 @@ define(function(require, exports, module) {
             var target = task.target.replace(/^~/, c9.home);
             
             proc.execFile("ln", {
-                args: ["-s", source, target],
+                args: ["-f", "-s", source, target],
                 cwd: options.cwd || null
             }, function(err, stdout, stderr){
                 // Pipe the data to the onData function
-                if (stdout) onData(stdout, "stdout");
-                if (stderr) onData(stderr, "stderr");
+                if (stdout) onData(stdout);
+                if (stderr) onData(stderr);
                 
                 if (err) return callback(err);
                 else callback();

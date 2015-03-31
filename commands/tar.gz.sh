@@ -1,8 +1,8 @@
 set -e
 
-SOURCE=$1
-TARGET=$2
-URL=$3
+SOURCE=$0
+TARGET=$1
+URL=$2
 
 has() {
   type "$1" > /dev/null 2>&1
@@ -21,7 +21,7 @@ cd $TARGET
 if [ "$URL" ]; then
 
     if has "wget"; then
-        DOWNLOAD="wget --no-check-certificate -nc"
+        DOWNLOAD="wget --no-check-certificate -nc -nv"
     elif has "curl"; then
         DOWNLOAD="curl -sSOL"
     else
@@ -29,7 +29,9 @@ if [ "$URL" ]; then
         exit 1
     fi
 
+    echo "Downloading $URL"
     $DOWNLOAD "$URL"
+    
     SOURCE="$TARGET/$(basename $URL)"
 fi
 
@@ -40,7 +42,9 @@ if [ `dirname $SOURCE` != $TARGET ]; then
 fi
 
 # Unpack source
-tar -zxvf $SOURCE
+echo -n "Unpacking $SOURCE"
+tar -zxf $SOURCE
+echo " [Done]"
 
 # Delete package
 rm -Rf $SOURCE

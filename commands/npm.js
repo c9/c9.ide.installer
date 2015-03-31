@@ -23,22 +23,19 @@ define(function(require, exports, module) {
                 + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
                 + '$C9_DIR/node/bin/npm install -g ' + task;
             
-            proc.spawn(binBash, {
+            proc.pty(binBash, {
                 args: ["-c", script],
                 cwd: options.cwd || null
-            }, function(err, process){
+            }, function(err, pty){
                 if (err) return callback(err);
                 
                 // Pipe the data to the onData function
-                process.stdout.on("data", function(chunk){
-                    onData(chunk, "stdout");
-                });
-                process.stderr.on("data", function(chunk){
-                    onData(chunk, "stderr");
+                pty.on("data", function(chunk){
+                    onData(chunk, pty);
                 });
                 
                 // When process exits call callback
-                process.on("exit", function(code){
+                pty.on("exit", function(code){
                     if (!code) callback();
                     else callback(new Error("Failed. Exit code " + code));
                 });

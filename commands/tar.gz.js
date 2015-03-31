@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin", "installer", "proc"];
+    main.consumes = ["Plugin", "installer", "proc", "c9"];
     main.provides = ["installer.tar.gz"];
     return main;
 
@@ -7,8 +7,9 @@ define(function(require, exports, module) {
         var Plugin = imports.Plugin;
         var installer = imports.installer;
         var proc = imports.proc;
+        var c9 = imports.c9;
         
-        var binBash = options.binBash || "bash";
+        var bashBin = options.bashBin || "bash";
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -22,22 +23,22 @@ define(function(require, exports, module) {
                     + "or url field: " + JSON.stringify(task));
             }
             
-            proc.spawn(binBash, {
-                args: ["-c", require("text!./tar.gz.sh"), task.source, task.target, task.url],
+            var source = (task.source || "-1").replace(/^~/, c9.home);
+            var target = task.target.replace(/^~/, c9.home);
+            
+            proc.pty(bashBin, {
+                args: ["-c", require("text!./tar.gz.sh"), source, target, task.url],
                 cwd: options.cwd || null
-            }, function(err, process){
+            }, function(err, pty){
                 if (err) return callback(err);
                 
                 // Pipe the data to the onData function
-                process.stdout.on("data", function(chunk){
-                    onData(chunk, "stdout");
-                });
-                process.stderr.on("data", function(chunk){
-                    onData(chunk, "stderr");
+                pty.on("data", function(chunk){
+                    onData(chunk, pty);
                 });
                 
                 // When process exits call callback
-                process.on("exit", function(code){
+                pty.on("exit", function(code){
                     if (!code) callback();
                     else callback(new Error("Failed. Exit code " + code));
                 });

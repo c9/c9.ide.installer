@@ -69,17 +69,17 @@ define(function(require, exports, module) {
                 tasks.push(task);
             }
             
-            function execute(tasks, callback) {
+            function execute(tasks, callback, options) {
                 var options = tasks.$options;
                 
                 // Loop over all tasks or sub-tasks when called recursively
                 async.eachSeries(tasks, function(task, next) {
-                    // The task consists of multiple tasks
-                    if (Array.isArray(task))
-                        return execute(task, next);
-                    
                     if (!options)
                         options = task.$options;
+                        
+                    // The task consists of multiple tasks
+                    if (Array.isArray(task))
+                        return execute(task, next, options);
                     
                     // Loop over all competing tasks
                     var found = false;
@@ -101,9 +101,11 @@ define(function(require, exports, module) {
                                     item: item
                                 });
                                 
-                                command.execute(item, options, function(chunk, std, process){
-                                    emit("data", { data: chunk, std: std, process: process });
+                                command.execute(item, options, function(chunk, process){
+                                    emit("data", { data: chunk, process: process });
                                 }, function(err){
+                                    if (!err) found = true;
+                                    
                                     next(err);
                                 });
                             }, function(err){
@@ -113,7 +115,8 @@ define(function(require, exports, module) {
                     }, function(err){
                         if (err) return next(err);
                         if (!found) {
-                            err = new Error("None of the available commands are available");
+                            err = new Error("None of the available commands are available: " 
+                                + JSON.stringify(task, 4, "   "));
                             err.code = "ENOTAVAILABLE";
                             return next(err);
                         }

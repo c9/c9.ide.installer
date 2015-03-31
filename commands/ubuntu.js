@@ -19,22 +19,19 @@ define(function(require, exports, module) {
             var script = 'set -e\n'
                 + 'sudo apt-get install ' + task;
             
-            proc.spawn(binBash, {
+            proc.pty(binBash, {
                 args: ["-c", script],
                 cwd: options.cwd || null
-            }, function(err, process){
+            }, function(err, pty){
                 if (err) return callback(err);
                 
                 // Pipe the data to the onData function
-                process.stdout.on("data", function(chunk){
-                    onData(chunk, "stdout", process);
-                });
-                process.stderr.on("data", function(chunk){
-                    onData(chunk, "stderr", process);
+                pty.on("data", function(chunk){
+                    onData(chunk, pty);
                 });
                 
                 // When process exits call callback
-                process.on("exit", function(code){
+                pty.on("exit", function(code){
                     if (!code) callback();
                     else callback(new Error("Failed. Exit code " + code));
                 });
