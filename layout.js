@@ -21,7 +21,7 @@ define(function(require, exports, module) {
             var skin = require("text!/static/plugins/c9.ide.layout.classic/skins.xml");
             ui.insertSkin({ data: skin }, plugin);
             
-            ui.insertCss(require("text!/static/standalone/skin/default/dark.css"), false, plugin);
+            ui.insertCss(require("text!/static/standalone/skin/default/flat-light.css"), false, plugin);
             
             var css = require("text!/static/plugins/c9.ide.layout.classic/keyframes.css");
             css = css.replace(/@\{image-path\}/g, "/static/plugins/c9.ide.layout.classic/images")
@@ -35,6 +35,7 @@ define(function(require, exports, module) {
         });
         
         plugin.on("unload", function(){
+            loaded = false;
         });
         
         /***** Register and define API *****/

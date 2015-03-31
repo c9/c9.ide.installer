@@ -63,7 +63,7 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function selfInstall(callback) {
-            createSession("c9.ide.installer", "1.0.0", 
+            createSession("Cloud9 IDE", c9.version || "3.0.0", 
                 require("./install.js"), callback);
         }
         

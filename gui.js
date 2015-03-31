@@ -16,7 +16,10 @@ define(function(require, exports, module) {
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
             title: "Cloud9 Setup",
-            allowClose: true
+            allowClose: true,
+            class: "installer",
+            resizable: true,
+            height: 400
         });
         
         var logDiv, spinner, lastOutput, datagrid, aborting;
@@ -159,7 +162,6 @@ define(function(require, exports, module) {
             plugin.on("next", function(e) {
                 var page = e.activePage;
                 if (page.name == "intro") {
-                    plugin.resizable = true;
                     // plugin.width = 512;
                     return overview;
                 }
