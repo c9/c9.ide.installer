@@ -148,7 +148,9 @@ define(function(require, exports, module) {
                         
                         if (toChildren[label]) {
                             var all = true;
-                            var hasUnchecked = parent.items.some(function(n){ return !n.isChecked });
+                            var hasUnchecked = parent.items.some(function(n){ 
+                                return nodes.indexOf(n) == -1 && !n.isChecked 
+                            });
                             if (hasUnchecked) parent.isChecked = true;
                             
                             parent.items.forEach(function(n){

@@ -58,7 +58,7 @@ define(function(require, exports, module) {
                     plugin.on("stop", function(){
                         if (sessions.length == 0) {
                             proc.installMode = false;
-                            callback();
+                            callback(true);
                         }
                     });
                     
