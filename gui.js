@@ -171,6 +171,15 @@ define(function(require, exports, module) {
                         else
                             parent.isChecked = state ? -1 : false;
                     });
+                    
+                    if (getSelectedSessions().length === 0) {
+                        plugin.showFinish = true;
+                        plugin.showNext = false;
+                    }
+                    else {
+                        plugin.showFinish = false;
+                        plugin.showNext = true;
+                    }
                 }
                 
                 datagrid.on("check", updateParents);
@@ -270,6 +279,7 @@ define(function(require, exports, module) {
                 var node = { 
                     label: session.package.name, 
                     description: "Version " + session.package.version,
+                    session: session,
                     items: [],
                     isOpen: true,
                     isChecked: true
@@ -302,6 +312,27 @@ define(function(require, exports, module) {
             complete.container.querySelector("blockquote").innerHTML = msg || lastComplete[1];
         }
         
+        function getSelectedSessions(){
+            var sessions = [];
+            
+            var nodes = datagrid.root.items;
+            nodes.filter(function(node){
+                var include = typeof node.isChecked == "boolean"
+                    ? node.isChecked
+                    : true;
+                if (!include) return false;
+                
+                var session = node.session;
+                session.tasks.forEach(function(task){
+                    task.$options.ignore = task.$options.isChecked === false;
+                });
+                
+                sessions.push(session);
+            });
+            
+            return sessions;
+        }
+        
         function log(msg) {
             (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
             logDiv.scrollTop = logDiv.scrollHeight;
@@ -322,7 +353,8 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
-            var _sessions = sessions.slice(0); // copy sessions
+            var _sessions = getSelectedSessions();
+            sessions = [];
             
             async.eachSeries(_sessions, function(session, next){
                 if (aborting) return next();

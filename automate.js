@@ -70,13 +70,17 @@ define(function(require, exports, module) {
             }
             
             function execute(tasks, callback, options) {
-                var options = tasks.$options;
+                if (!options)
+                    options = tasks.$options;
                 
                 // Loop over all tasks or sub-tasks when called recursively
                 async.eachSeries(tasks, function(task, next) {
                     if (!options)
-                        options = task.$options;
-                        
+                        options = task.$options || {};
+                    
+                    if (options.ignore) 
+                        return next();
+                    
                     // The task consists of multiple tasks
                     if (Array.isArray(task))
                         return execute(task, next, options);
