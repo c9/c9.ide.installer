@@ -46,11 +46,15 @@ module.exports = function(session, options){
     session.install({
         "name": "tmux", 
         "description": "Tmux - the terminal multiplexer" 
-    }, {
-        "ubuntu": "tmux",
-        "centos": "tmux",
-        "bash": require("text!./tmux.sh")
-    });
+    }, [
+        {
+            "ubuntu": "tmux",
+            "centos": "tmux"
+        },
+        {
+             "bash": require("text!./tmux.sh")
+        }
+    ]);
 
     // Show the installation screen
     session.start();

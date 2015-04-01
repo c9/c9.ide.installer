@@ -17,12 +17,12 @@ fi
 
 if [ "$DIR" ]; then
     set +e
-    rm -Rf $TARGET 2>/dev/null
+    rm -Rf "$TARGET" 2>/dev/null
     set -e
 fi
 
-mkdir -p $TARGET
-cd $TARGET
+mkdir -p "$TARGET"
+cd "$TARGET"
 
 # Download file if needed
 if [ "$URL" ]; then
@@ -44,13 +44,13 @@ fi
 
 # Make sure package is in the target folder
 if [ `dirname $SOURCE` != $TARGET ]; then
-    cp -a $SOURCE $TARGET
+    cp -a "$SOURCE" "$TARGET"
     SOURCE="$TARGET/$(basename $SOURCE)"
 fi
 
 # Unpack source
 echo -n "Unpacking $SOURCE"
-tar -zxf $SOURCE
+tar -zxf "$SOURCE"
 echo " [Done]"
 
 # Delete package
@@ -59,10 +59,10 @@ rm -Rf $SOURCE
 # Move directory
 if [ "$DIR" ]; then
     echo -n "Merging $TARGET/$DIR in $TARGET"
-    mv $DIR/* .
+    mv "$DIR/*" .
     set +e
-    mv $DIR/.* . 2>/dev/null
+    mv "$DIR/.*" . 2>/dev/null
     set -e
-    rmdir $DIR
+    rmdir "$DIR"
     echo " [Done]"
 fi
