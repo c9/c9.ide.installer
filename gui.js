@@ -75,6 +75,7 @@ define(function(require, exports, module) {
             else if (plugin.visible) {
                 updatePackages();
             }
+            else return;
             
             return false;
         }
