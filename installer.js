@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         
         var sessions = [];
         var installed = false;
+        var installCb;
         
         // Check that all the dependencies are installed
         var VERSION = c9.version || "3.0.0";
@@ -31,7 +32,12 @@ define(function(require, exports, module) {
                 if (!installSelfCheck || installChecked)
                     return e.done(false);
                 
-                readFromDisk(e.done, e.vfs);
+                installCb = e.done;
+                
+                if (!proc.installMode)
+                    readFromDisk(e.vfs);
+                else
+                    proc.installMode = e.vfs;
                 
                 return false;
             });
@@ -39,7 +45,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function readFromDisk(callback, vfs){
+        function readFromDisk(vfs){
             function done(err){
                 emit.sticky("ready", installed);
                 
@@ -53,13 +59,13 @@ define(function(require, exports, module) {
                         if (sessions.length == 0) {
                             proc.installMode = false;
                             installChecked = true;
-                            callback(true);
+                            installCb(true);
                         }
                     });
                 }
                 else {
                     installChecked = true;
-                    callback();
+                    installCb();
                 }
             }
             
