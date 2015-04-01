@@ -27,7 +27,7 @@ define(function(require, exports, module) {
             var target = task.target.replace(/^~/, c9.home);
             
             proc.pty(bashBin, {
-                args: ["-c", require("text!./tar.gz.sh"), source, target, task.url],
+                args: ["-c", require("text!./tar.gz.sh"), source, target, task.url, task.dir],
                 cwd: options.cwd || null
             }, function(err, pty){
                 if (err) return callback(err);

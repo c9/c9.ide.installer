@@ -3,20 +3,21 @@ define(function(require, exports, module) {
 module.exports = function(session, options){
     session.introduction = require("text!./intro.html");
     session.preInstallScript = require("text!./check-deps.sh");
-
-    var NODEVERSION = "v0.10.28";
     
     // Node.js
+    var NODEVERSION = "v0.10.28";
+    var nodeName = "node-" + NODEVERSION + "-" 
+        + options.platform + "-" + options.arch;
+    
     session.install({
         "name": "Node.js", 
         "description": "Node.js " + NODEVERSION
     }, [
         {
             "tar.gz": { 
-                "url": "http://nodejs.org/dist/" + NODEVERSION + "/node-" 
-                    + NODEVERSION + "-" + options.platform + "-" 
-                    + options.arch + ".tar.gz",
-                "target": "~/.c9/node"
+                "url": "http://nodejs.org/dist/" + NODEVERSION + "/" + nodeName + ".tar.gz",
+                "target": "~/.c9/node",
+                "dir": nodeName
             }
         },
         {
