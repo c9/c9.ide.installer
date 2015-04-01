@@ -24,7 +24,7 @@ define(function(require, exports, module) {
         
         // Check that all the dependencies are installed
         var VERSION = c9.version || "3.0.0";
-        createSession("Cloud9 IDE", VERSION, require("./install"));
+        createSession("Cloud9 IDE", VERSION, require("./install/install"));
         
         function load() {
             imports.vfs.on("beforeConnect", function(e) {

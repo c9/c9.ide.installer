@@ -1,10 +1,11 @@
 define(function(require, exports, module) {
     
 module.exports = function(session, options){
-    session.introduction = require("text!./install.intro.html");
+    session.introduction = require("text!./intro.html");
+    session.preInstallScript = require("text!./check-deps.sh");
 
     var NODEVERSION = "v0.10.28";
-
+    
     // Node.js
     session.install({
         "name": "Node.js", 
@@ -19,29 +20,19 @@ module.exports = function(session, options){
             }
         },
         {
-            "bash": require("text!./install.node.sh")
+            "bash": require("text!./node.sh")
         }
     ]);
 
-    // "Requires" will check any required versions. There's also 
-    // "version-greater", "version-lesser", which can be combined
-    // The 3rd argument of install() is an optional function that validates
-    // the installation of the package.
+    // Pty.js
     session.install({
         "name": "Pty.js",
-        "description": "Pseudo Terminal support. Needed by the Cloud9 Terminal",
-        "cwd": "~/.c9",
-        "requires": [
-            { 
-                "command": "python --version 2>&1", 
-                "version-equal": "2.7",
-                "message:": "Python version 2.7 is required to install pty.js."
-            }
-        ]
+        "description": "Pseudo Terminal support. Used by the Cloud9 Terminal",
+        "cwd": "~/.c9"
     }, {
         "npm": ["node-gyp", "pty.js@0.2.3"]
     }, function(done){
-        session.run(
+        session.exec(
             '"~/.c9/node/bin/node" -e "console.log(require(\'pty.js\'))"',
             function(err, stdout, stderr){
                 if (!stdout || stdout.indexOf("createTerminal") == -1)
@@ -50,15 +41,14 @@ module.exports = function(session, options){
             });
     });
     
-    // Will try to install tmux via apt-get, yum, etc (OR) and fall backs 
-    // on failure to a bash install script
+    // Tmux
     session.install({
         "name": "tmux", 
         "description": "Tmux - the terminal multiplexer" 
     }, {
         "ubuntu": "tmux",
         "centos": "tmux",
-        "bash": require("text!./install.tmux.sh")
+        "bash": require("text!./tmux.sh")
     });
 
     // Show the installation screen

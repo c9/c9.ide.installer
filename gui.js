@@ -250,7 +250,7 @@ define(function(require, exports, module) {
                                 aborting = true;
                                 plugin.gotoPage(complete);
                                 setCompleteMessage("Installation Aborted",
-                                    require("text!./install.aborted.html"));
+                                    require("text!./install/aborted.html"));
                             });
                     });
                 }
@@ -377,7 +377,8 @@ define(function(require, exports, module) {
                 session.on("each", function(e){
                     if (lastOptions != e.options) {
                         lastOptions = e.options;
-                        logln("Installing " + e.options.name);
+                        if (e.options.name)
+                            logln("Installing " + e.options.name);
                     }
                 });
                 session.on("data", function(e){
@@ -388,10 +389,31 @@ define(function(require, exports, module) {
                 
                 session.start(next, true);
             }, function(err){
-                // if (err) 
-                //     return log("ERROR: " + err.message); //progress(err.message, true, true);
+                logDiv.scrollTop = logDiv.scrollHeight;
                 
-                done(err);
+                plugin.showCancel = false;
+                
+                if (err) {
+                    logln("<br />" + err.message + "<br /><br />"
+                      + "<span class='error'>One or more errors occured. "
+                      + "Please try to resolve them and\n"
+                      + "restart Cloud9 or contact support@c9.io.</span>");
+                      
+                    spinner.style.display = "none";
+                    logDiv.className = "log details";
+                    
+                    plugin.showPrevious = true;
+                }
+                else {
+                    spinner.style.display = "none";
+                    
+                    setCompleteMessage("Installation Complete",
+                        require("text!./install/success.html")
+                            .replace("{{sessions}}", _sessions.map(function(s){
+                                return s.package.name + " " + s.package.version;
+                            }).join("</li><li>")));
+                    plugin.showNext = true;
+                }
             });
             
             function progress(message, output, error) {
@@ -408,34 +430,6 @@ define(function(require, exports, module) {
                 else {
                     lastOutput = null;
                     logln(message);
-                }
-            }
-            
-            function done(err) {
-                // logDiv.style.paddingBottom = "60px";
-                logDiv.scrollTop = logDiv.scrollHeight;
-                
-                plugin.showCancel = false;
-                
-                if (err) {
-                    logln("<span class='error'>One or more errors occured. "
-                      + "Please try to resolve them and\n"
-                      + "restart Cloud9 or contact support@c9.io.</span>"
-                      + err.message);
-                      
-                    spinner.style.display = "none";
-                    logDiv.className = "log details";
-                    
-                    plugin.showPrevious = true;
-                }
-                else {
-                    spinner.style.display = "none";
-                    
-                    setCompleteMessage("Installation Complete",
-                        require("text!./install.success.html").replace("{{sessions}}", _sessions.map(function(s){
-                            return s.package.name + " " + s.package.version;
-                        }).join("</li><li>")));
-                    plugin.showNext = true;
                 }
             }
         }
