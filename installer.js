@@ -113,6 +113,10 @@ define(function(require, exports, module) {
             automate.addCommandAlias.apply(this, args);
         }
         
+        function reinstall(package){
+            
+        }
+        
         function createSession(packageName, packageVersion, populateSession, callback) {
             if (!installed) {
                 return plugin.on("ready", 
@@ -267,6 +271,11 @@ define(function(require, exports, module) {
                  */
                 "each"
             ],
+            
+            /**
+             * 
+             */
+            reinstall: reinstall,
             
             /**
              * 
