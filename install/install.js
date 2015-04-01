@@ -9,7 +9,7 @@ module.exports = function(session, options){
     // Node.js
     session.install({
         "name": "Node.js", 
-        "description": "Node.js " + NODEVERSION 
+        "description": "Node.js " + NODEVERSION
     }, [
         {
             "tar.gz": { 

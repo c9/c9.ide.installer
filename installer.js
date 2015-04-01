@@ -60,12 +60,14 @@ define(function(require, exports, module) {
                             proc.installMode = false;
                             installChecked = true;
                             installCb(true);
+                            installCb = null;
                         }
                     });
                 }
                 else {
                     installChecked = true;
                     installCb();
+                    installCb = null;
                 }
             }
             
