@@ -48,7 +48,7 @@ define(function(require, exports, module) {
         
         function readFromDisk(vfs){
             function done(err){
-                installed = {};
+                if (!installed) installed = {};
                 emit.sticky("ready", installed);
                 
                 if (err && err.code == "ENOENT" || installed["Cloud9 IDE"] !== VERSION) {
@@ -85,6 +85,7 @@ define(function(require, exports, module) {
                     if (data == "1\n") // Backwards compatibility
                         data = "Cloud9 IDE@3.0.0\nc9.ide.collab@3.0.0\nc9.ide.find@3.0.0";
                     
+                    installed = {};
                     (data || "").split("\n").forEach(function(line){
                         if (!line) return;
                         var p = line.split("@");
