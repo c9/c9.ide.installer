@@ -1,6 +1,5 @@
 set -e
-echo "Wrong"
-exit 100
+
 has() {
   type "$1" > /dev/null 2>&1
   return $?
