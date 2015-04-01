@@ -25,6 +25,7 @@ define(function(require, exports, module) {
         var logDiv, spinner, lastOutput, datagrid, aborting;
         var intro, overview, execute, complete;
         var sessions = [];
+        var executeList;
         
         function load(){
             if (options.testing)
@@ -219,6 +220,8 @@ define(function(require, exports, module) {
             complete.on("draw", function(e) {
                 ui.insertHtml(e.html, require("text!./pages/complete.html"), complete);
                 setCompleteMessage();
+                plugin.showPrevious = false;
+                plugin.showFinish = true;
             });
             
             // plugin.on("previous", function(e) {
@@ -243,15 +246,18 @@ define(function(require, exports, module) {
             });
             
             plugin.on("cancel", function(e) {
-                if (e.activePage.name == "automatic") {
-                    sessions.forEach(function(session){
+                if (e.activePage.name == "execute") {
+                    aborting = true;
+                    
+                    setCompleteMessage("Installation Aborted",
+                        require("text!./install/aborted.html"));
+                    
+                    plugin.gotoPage(complete);
+                    plugin.showCancel = false;
+                        
+                    executeList.forEach(function(session){
                         if (session.executing)
-                            session.abort(function(){
-                                aborting = true;
-                                plugin.gotoPage(complete);
-                                setCompleteMessage("Installation Aborted",
-                                    require("text!./install/aborted.html"));
-                            });
+                            session.abort();
                     });
                 }
             });
@@ -358,15 +364,15 @@ define(function(require, exports, module) {
             spinner.style.display = "block";
             
             var aborted = [];
-            var _sessions = getSelectedSessions(aborted);
+            executeList = getSelectedSessions(aborted);
             sessions = [];
             
             aborted.forEach(function(session){
                 session.abort();
             });
             
-            async.eachSeries(_sessions, function(session, next){
-                if (aborting) return next();
+            async.eachSeries(executeList, function(session, next){
+                if (aborting) return next(new Error("Aborted"));
                 
                 session.on("run", function(){
                     logln("Package " + session.package.name 
@@ -402,14 +408,15 @@ define(function(require, exports, module) {
                     spinner.style.display = "none";
                     logDiv.className = "log details";
                     
-                    plugin.showPrevious = true;
+                    if (plugin.activePage.name == "execute")
+                        plugin.showPrevious = true;
                 }
                 else {
                     spinner.style.display = "none";
                     
                     setCompleteMessage("Installation Complete",
                         require("text!./install/success.html")
-                            .replace("{{sessions}}", _sessions.map(function(s){
+                            .replace("{{sessions}}", executeList.map(function(s){
                                 return s.package.name + " " + s.package.version;
                             }).join("</li><li>")));
                     plugin.showNext = true;
@@ -445,6 +452,7 @@ define(function(require, exports, module) {
         });
         
         plugin.on("unload", function(){
+            aborting = false;
             logDiv = null;
             spinner = null;
             lastOutput = null;
@@ -455,6 +463,7 @@ define(function(require, exports, module) {
             drawn = null;
             datagrid = null;
             lastComplete = null;
+            sessions = [];
         });
         
         /***** Register and define API *****/
