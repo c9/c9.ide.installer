@@ -50,7 +50,7 @@ fi
 
 # Unpack source
 echo -n "Unpacking $SOURCE"
-tar -zxf "$SOURCE"
+tar --overwrite -zxf "$SOURCE"
 echo " [Done]"
 
 # Delete package
