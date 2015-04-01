@@ -19,6 +19,7 @@ define(function(require, exports, module) {
         var installSelfCheck = options.installSelfCheck;
         var installChecked = false;
         
+        var packages = {};
         var sessions = [];
         var installed = false;
         var installCb;
@@ -114,10 +115,16 @@ define(function(require, exports, module) {
         }
         
         function reinstall(package){
+            if (packages[packageName]) {
+                createSession(packageName, packages[packageName].version, 
+                    packages[packageName].populate, null, true);
+                return true;
+            }
             
+            return false;
         }
         
-        function createSession(packageName, packageVersion, populateSession, callback) {
+        function createSession(packageName, packageVersion, populateSession, callback, force) {
             if (!installed) {
                 return plugin.on("ready", 
                     createSession.bind(this, packageName, packageVersion, populateSession, callback));
@@ -126,6 +133,11 @@ define(function(require, exports, module) {
                 return c9.on("ready", 
                     createSession.bind(this, packageName, packageVersion, populateSession, callback));
             }
+            
+            packages[packageName] = { 
+                version: packageVersion, 
+                populate: populateSession 
+            };
             
             if (installed[packageName] == packageVersion)
                 return callback && callback();
