@@ -83,7 +83,7 @@ define(function(require, exports, module) {
             if (drawn) return;
             drawn = true;
             
-            ui.insertCss(require("text!./style.css"), plugin);
+            ui.insertCss(require("text!./style.css"), options.staticPrefix, plugin);
             
             // Page Intro - displays intro texts
             intro = new WizardPage({ name: "intro" }, plugin);
@@ -312,7 +312,7 @@ define(function(require, exports, module) {
             complete.container.querySelector("blockquote").innerHTML = msg || lastComplete[1];
         }
         
-        function getSelectedSessions(){
+        function getSelectedSessions(ignored){
             var sessions = [];
             
             var nodes = datagrid.root.items;
@@ -320,9 +320,13 @@ define(function(require, exports, module) {
                 var include = typeof node.isChecked == "boolean"
                     ? node.isChecked
                     : true;
-                if (!include) return false;
                 
                 var session = node.session;
+                if (!include) {
+                    if (ignored) ignored.push(session);
+                    return false;
+                }
+                
                 session.tasks.forEach(function(task){
                     task.$options.ignore = task.$options.isChecked === false;
                 });
@@ -353,8 +357,13 @@ define(function(require, exports, module) {
             logln("Starting Installation...");
             spinner.style.display = "block";
             
-            var _sessions = getSelectedSessions();
+            var aborted = [];
+            var _sessions = getSelectedSessions(aborted);
             sessions = [];
+            
+            aborted.forEach(function(session){
+                session.abort();
+            });
             
             async.eachSeries(_sessions, function(session, next){
                 if (aborting) return next();
@@ -411,8 +420,8 @@ define(function(require, exports, module) {
                 if (err) {
                     logln("<span class='error'>One or more errors occured. "
                       + "Please try to resolve them and\n"
-                      + "restart Cloud9 or contact support@c9.io."
-                      + err.message + "</span>");
+                      + "restart Cloud9 or contact support@c9.io.</span>"
+                      + err.message);
                       
                     spinner.style.display = "none";
                     logDiv.className = "log details";

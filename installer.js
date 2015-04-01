@@ -15,27 +15,21 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         var emit = plugin.getEmitter();
         
-        var VERSION = c9.version || "3.0.0";
         var NAMESPACE = "installer";
         var installSelfCheck = options.installSelfCheck;
         var installChecked = false;
         
         var sessions = [];
-        var installed = {};
+        var installed = false;
+        
+        // Check that all the dependencies are installed
+        var VERSION = c9.version || "3.0.0";
+        createSession("Cloud9 IDE", VERSION, require("./install"));
         
         function load() {
             imports.vfs.on("beforeConnect", function(e) {
                 if (!installSelfCheck || installChecked)
                     return e.done(false);
-                
-                installChecked = true;
-                
-                // plugin.allowClose = false;
-                // plugin.once("finish", function(){
-                //     plugin.hide();
-                //     e.callback(true);
-                // });
-                // plugin.show(true);
                 
                 readFromDisk(e.done, e.vfs);
                 
@@ -58,13 +52,13 @@ define(function(require, exports, module) {
                     plugin.on("stop", function(){
                         if (sessions.length == 0) {
                             proc.installMode = false;
+                            installChecked = true;
                             callback(true);
                         }
                     });
-                    
-                    selfInstall();
                 }
                 else {
+                    installChecked = true;
                     callback();
                 }
             }
@@ -81,6 +75,7 @@ define(function(require, exports, module) {
                     if (data == "1\n") // Backwards compatibility
                         data = "Cloud9 IDE@3.0.0\nc9.ide.collab@3.0.0\nc9.ide.find@3.0.0";
                     
+                    installed = {};
                     (data || "").split("\n").forEach(function(line){
                         if (!line) return;
                         var p = line.split("@");
@@ -89,59 +84,6 @@ define(function(require, exports, module) {
                     
                     done();
                 });
-            });
-        }
-        
-        function selfInstall() {
-            createSession("Cloud9 IDE", VERSION, require("./install.js"));
-                
-            createSession("c9.ide.collab", VERSION, function(session, options){
-                // Installation tasks are stacked (AND) by using an array as the 2nd
-                // argument to install()
-                session.install({
-                    "name": "collab-deps",
-                    "description": "Dependencies for the collaboration features of Cloud9",
-                    "cwd": "~/.c9",
-                    "optional": true
-                }, [
-                    {
-                        "npm": ["sqlite3@2.1.18", "sequelize@2.0.0-beta.0"]
-                    },
-                    {
-                        "tar.gz": [
-                            {
-                                "url": "https://raw.githubusercontent.com/c9/install/master/packages/sqlite3/linux/sqlite3.tar.gz",
-                                "target": "~/.c9/lib/sqlite3"
-                            },
-                            { 
-                                "url": "https://raw.githubusercontent.com/c9/install/master/packages/extend/c9-vfs-extend.tar.gz",
-                                "target": "~/.c9/c9-vfs-extend"
-                            }
-                        ]
-                    },
-                    {
-                        "symlink": {
-                            "source": "~/.c9/lib/sqlite3/sqlite3",
-                            "target": "~/.c9/bin/sqlite3"
-                        }
-                    }
-                ]);
-                
-                session.start();
-            });
-                
-            createSession("c9.ide.find", VERSION, function(session, options){
-                // By specifying optional:true the user can disable the installation of this package
-                session.install({
-                    "name": "Nak",
-                    "description": "Fast file searches for Cloud9",
-                    "cwd": "~/.c9",
-                    "optional": true
-                }, {
-                    "npm": "https://github.com/c9/nak/tarball/c9"
-                });
-                
-                session.start();
             });
         }
         
@@ -159,14 +101,18 @@ define(function(require, exports, module) {
             for (var i = 0; i < arguments.length; i++) {
                 args.push(arguments[i]);
             }
-                
+            
             automate.addCommandAlias.apply(this, args);
         }
         
         function createSession(packageName, packageVersion, populateSession, callback) {
             if (!installed) {
                 return plugin.on("ready", 
-                    createSession.bind(this, packageName, packageVersion, install, callback));
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback));
+            }
+            if (!c9.isReady) {
+                return c9.on("ready", 
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback));
             }
             
             if (installed[packageName] == packageVersion)
@@ -276,6 +222,7 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function() {
             installChecked = false;
+            installed = false;
         });
         
         /***** Register and define API *****/

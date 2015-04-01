@@ -138,7 +138,7 @@ define(function(require, exports, module) {
                 executing = true;
                 execute(tasks, function(){
                     executing = false;
-                    callback.apply(this, arguments);
+                    callback && callback.apply(this, arguments);
                     session.unload();
                     
                     emit("stop");
@@ -146,7 +146,8 @@ define(function(require, exports, module) {
             }
             
             function abort(callback){
-                
+                emit("stop", new Error("User Cancelled"));
+                callback && callback();
             }
             
             // Make session a baseclass to allow others to extend

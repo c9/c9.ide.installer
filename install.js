@@ -1,10 +1,5 @@
 define(function(require, exports, module) {
     
-// Node.js - to run the Cloud9 basics
-// Tmux - provides smart terminals
-// Pty.js - more terminal dependencies
-// Nak - provides search & file listing
-    
 module.exports = function(session, options){
     session.introduction = require("text!./install.intro.html");
 
