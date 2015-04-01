@@ -59,9 +59,9 @@ rm -Rf $SOURCE
 # Move directory
 if [ "$DIR" ]; then
     echo -n "Merging $TARGET/$DIR in $TARGET"
-    mv "$DIR/*" .
+    mv "$DIR/"* .
     set +e
-    mv "$DIR/.*" . 2>/dev/null
+    mv "$DIR/."* . 2>/dev/null
     set -e
     rmdir "$DIR"
     echo " [Done]"
