@@ -288,7 +288,7 @@ define(function(require, exports, module) {
                     description: "Version " + session.package.version,
                     session: session,
                     items: [],
-                    isOpen: true,
+                    isOpen: false,
                     isChecked: true
                 };
                 root.items.push(node);
