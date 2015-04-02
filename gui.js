@@ -410,7 +410,7 @@ define(function(require, exports, module) {
                     logDiv.className = "log details";
                     
                     if (plugin.activePage.name == "execute")
-                        plugin.showPrevious = true;
+                        plugin.showFinish = true;
                 }
                 else {
                     spinner.style.display = "none";
