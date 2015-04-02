@@ -117,7 +117,7 @@
     .execute .progress{
         position: absolute;
         left: 90px;
-        bottom: -44px;
+        bottom: -50px;
         font-family: arial;
         font-size: 12px;
         color: @installer-log-progress-color;
