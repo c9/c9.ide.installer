@@ -14,8 +14,8 @@ else
     exit 1
 fi
 
-C9_DIR=$HOME/.c9
-NPM=$C9_DIR/node/bin/npm
+C9_DIR="$HOME/.c9"
+NPM="$C9_DIR/node/bin/npm"
 
 download_virtualenv() {
   VIRTUALENV_VERSION="virtualenv-12.0.7"
