@@ -14,7 +14,7 @@ else
     exit 1
 fi
 
-C9_DIR=$HOME/.c9
+C9_DIR="$HOME/.c9"
 
 compile_tmux(){
   cd "$C9_DIR"

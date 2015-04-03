@@ -78,11 +78,11 @@ define(function(require, exports, module) {
             }, function(err, meta) {
                 if (err) return done(err);
                 
-                var data = "";    
+                var data = "";
                 var stream = meta.stream;
                 stream.on("data", function(chunk){ data += chunk; });
                 stream.on("end", function(){ 
-                    if (data.match(/1[\r\n]*$/)) // Backwards compatibility
+                    if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
                         data = "Cloud9 IDE@" + c9.version 
                             + "\nc9.ide.collab@" + c9.version 
                             + "\nc9.ide.find@" + c9.version;
