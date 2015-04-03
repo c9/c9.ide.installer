@@ -82,8 +82,10 @@ define(function(require, exports, module) {
                 var stream = meta.stream;
                 stream.on("data", function(chunk){ data += chunk; });
                 stream.on("end", function(){ 
-                    if (data == "1\n") // Backwards compatibility
-                        data = "Cloud9 IDE@3.0.0\nc9.ide.collab@3.0.0\nc9.ide.find@3.0.0";
+                    if (data.match(/1[\r\n]*$/)) // Backwards compatibility
+                        data = "Cloud9 IDE@" + c9.version 
+                            + "\nc9.ide.collab@" + c9.version 
+                            + "\nc9.ide.find@" + c9.version;
                     
                     installed = {};
                     (data || "").split("\n").forEach(function(line){
