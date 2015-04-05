@@ -22,7 +22,7 @@ define(function(require, exports, module) {
         var packages = {};
         var sessions = [];
         var installed = false;
-        var installCb;
+        var installCb, arch;
         
         // Check that all the dependencies are installed
         var VERSION = c9.version || "3.0.0";
@@ -49,7 +49,6 @@ define(function(require, exports, module) {
         function readFromDisk(vfs){
             function done(err){
                 if (!installed) installed = {};
-                emit.sticky("ready", installed);
                 
                 if (err && err.code == "ENOENT" || installed["Cloud9 IDE"] !== VERSION) {
                     // Tmux and pty.js are probably not installed. Lets switch 
@@ -71,6 +70,8 @@ define(function(require, exports, module) {
                     installCb();
                     installCb = null;
                 }
+                
+                emit.sticky("ready", installed);
             }
             
             vfs.readfile(options.installPath.replace(c9.home, "~") + "/installed", {
@@ -98,6 +99,7 @@ define(function(require, exports, module) {
                 });
             });
         }
+        
         
         function addPackageManager(name, implementation){
             automate.addCommand(NAMESPACE, name, implementation);
@@ -236,9 +238,22 @@ define(function(require, exports, module) {
             
             sessions.push(session);
             
-            populateSession(session, {
-                platform: c9.platform,
-                arch: c9.arch
+            if (arch === undefined) {
+                arch = null;
+                proc.execFile("uname", { args: ["-m"] }, function(e, p) {
+                    if (/x86_64/.test(p)) p = "x64";
+                    else if (/i.*86/) p = "x86";
+                    else if (/armv6l|armv7l/) p = "x86";
+                    arch = p || undefined;
+                    emit.sticky("arch", arch);
+                });
+            }
+            
+            plugin.once("arch", function() {
+                populateSession(session, {
+                    platform: c9.platform,
+                    arch: arch
+                });
             });
         }
         
@@ -250,6 +265,7 @@ define(function(require, exports, module) {
         plugin.on("unload", function() {
             installChecked = false;
             installed = false;
+            installCb = arch = undefined;
         });
         
         /***** Register and define API *****/
