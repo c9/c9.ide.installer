@@ -17,7 +17,7 @@ define(function(require, exports, module) {
          */
         function execute(task, options, onData, callback) {
             var NPM = options.cwd == "~/.c9"
-                ? "$C9_DIR/node/bin/npm"
+                ? '"$C9_DIR/node/bin/npm"'
                 : "npm";
             
             // node-gyp uses sytem node or fails with command not found if
@@ -25,7 +25,8 @@ define(function(require, exports, module) {
             var script = 'set -e\n'
                 + 'C9_DIR="$HOME/.c9"\n'
                 + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
-                + NPM + ' install -g ' + task;
+                + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
+                + NPM + ' install ' + task;
             
             proc.pty(binBash, {
                 args: ["-c", script],
