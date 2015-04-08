@@ -25,26 +25,53 @@ download_virtualenv() {
   mv $VIRTUALENV_VERSION virtualenv
 }
 
+check_python() {
+  if which python2.7 &> /dev/null; then
+    PYTHONVERSION="2.7"
+    PYTHON="python2.7"
+  else
+    PYTHONVERSION=`python --version 2>&1`
+    PYTHON=python
+  fi
+  
+  if [[ $PYTHONVERSION != *2.7* ]]; then
+    echo "Python version 2.7 is required to install pty.js. Please install python 2.7 and try again. You can find more information on how to install Python in the docs: https://docs.c9.io/ssh_workspaces.html"
+    exit 100
+  fi
+}
+
+configure_python() {
+  check_python
+  # when gyp is installed globally npm install pty.js won't work
+  # to test this use `sudo apt-get install gyp`
+  if [ `"$PYTHON" -c 'import gyp; print gyp.__file__' 2> /dev/null` ]; then
+    echo "You have a global gyp installed. Setting up VirtualEnv without global pakages"
+    rm -rf virtualenv
+    rm -rf python
+    installed=
+    if has virtualenv; then
+      # try global virtualenv first
+      (virtualenv "$C9_DIR/python") && installed=1
+    fi
+    
+    if ! [ "$installed" ]; then
+      download_virtualenv
+      "$PYTHON" virtualenv/virtualenv.py "$C9_DIR/python"
+    fi
+    if [[ -f "$C9_DIR/python/bin/python2" ]]; then
+      PYTHON="$C9_DIR/python/bin/python2"
+    else
+      echo "Unable to setup virtualenv"
+      exit 1
+    fi
+  fi
+  "$NPM" config -g set python "$PYTHON"
+}
+
 # use local npm cache
 "$NPM" config -g set cache  "$C9_DIR/tmp/.npm"
 
-# when gyp is installed globally npm install pty.js won't work
-# to test this use `sudo apt-get install gyp`
-if [ `python -c 'import gyp; print gyp.__file__' 2> /dev/null` ]; then
-  echo "You have a global gyp installed. Setting up VirtualEnv without global pakages"
-  rm -rf virtualenv
-  rm -rf python
-  if has virtualenv; then
-    virtualenv "$C9_DIR/python"
-  else
-    download_virtualenv
-    python virtualenv/virtualenv.py "$C9_DIR/python"
-  fi
-  if [[ -f "$C9_DIR/python/bin/python2" ]]; then
-    "$NPM" config -g set python "$C9_DIR/python/bin/python2"
-    export PYTHON="$C9_DIR/python/bin/python2"
-  else
-    echo "Unable to setup virtualenv"
-    exit 1
-  fi
-fi
+
+PYTHON=python
+configure_python
+
