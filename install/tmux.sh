@@ -75,7 +75,7 @@ check_tmux_version(){
     return 1
   fi
 
-  if [ $(python -c "ok = 1 if 1.7<=$tmux_version else 0; print ok") -eq 1 ]; then
+  if [ $(node -e "console.log(1.7<=$tmux_version)") == "true"  ]; then
     return 0
   else
     return 1

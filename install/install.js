@@ -54,7 +54,7 @@ module.exports = function(session, options){
                 "centos": "tmux"
             },
             {
-                "bash": 'mkdir -p ~/.c9/bin; ln -sf $(which tmux) ~/.c9/bin/tmux'
+                "bash": require("text!./tmux.sh")
             }
         ],
         "bash": require("text!./tmux.sh")
