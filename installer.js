@@ -16,7 +16,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var NAMESPACE = "installer";
-        var installSelfCheck = options.installSelfCheck;
+        var installSelfCheck = options.installSelfCheck && c9.platform != "win32";
         var installChecked = false;
         
         var packages = {};
