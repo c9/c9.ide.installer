@@ -25,7 +25,7 @@ define(function(require, exports, module) {
         var installCb, arch;
         
         // Check that all the dependencies are installed
-        var VERSION = c9.version || "3.0.0";
+        var VERSION = 1;
         createSession("Cloud9 IDE", VERSION, require("./install/install"));
         
         function load() {
@@ -84,15 +84,13 @@ define(function(require, exports, module) {
                 stream.on("data", function(chunk){ data += chunk; });
                 stream.on("end", function(){ 
                     if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
-                        data = "Cloud9 IDE@" + c9.version 
-                            + "\nc9.ide.collab@" + c9.version 
-                            + "\nc9.ide.find@" + c9.version;
+                        data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
                     
                     installed = {};
-                    (data || "").split("\n").forEach(function(line){
+                    data.split("\n").forEach(function(line){
                         if (!line) return;
                         var p = line.split("@");
-                        installed[p[0]] = p[1];
+                        installed[p[0]] = parseInt(p[1], 10);
                     });
                     
                     done();
@@ -137,6 +135,13 @@ define(function(require, exports, module) {
             if (!c9.isReady) {
                 return c9.on("ready", 
                     createSession.bind(this, packageName, packageVersion, populateSession, callback));
+            }
+            
+            if (typeof packageVersion == "function") {
+                force = callback;
+                callback = populateSession;
+                populateSession = packageVersion;
+                packageVersion = populateSession.version;
             }
             
             packages[packageName] = { 
