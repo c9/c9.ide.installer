@@ -48,15 +48,18 @@ module.exports = function(session, options){
         "description": "Tmux - the terminal multiplexer",
         "cwd": "~/.c9"
     }, {
-        "install": [
-            {
-                "ubuntu": "tmux",
-                "centos": "tmux"
-            },
-            {
-                "bash": require("text!./tmux.sh")
-            }
-        ],
+        // // TODO this causes `sudo: no tty present and no askpass program specified` errors
+        // // and it somehow breaks "bash" install method too, also this needs to ensure
+        // // apt-get installs the correct version instead of compiling 1.9 after installing 1.6
+        // "install": [
+        //     {
+        //         "ubuntu": "tmux",
+        //         "centos": "tmux"
+        //     },
+        //     {
+        //         "bash": require("text!./tmux.sh")
+        //     }
+        // ],
         "bash": require("text!./tmux.sh")
     });
 

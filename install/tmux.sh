@@ -15,6 +15,8 @@ else
 fi
 
 C9_DIR="$HOME/.c9"
+cd "$C9_DIR"
+PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH";
 
 compile_tmux(){
   cd "$C9_DIR"

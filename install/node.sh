@@ -16,6 +16,7 @@ fi
 
 C9_DIR="$HOME/.c9"
 NPM="$C9_DIR/node/bin/npm"
+cd "$C9_DIR"
 
 download_virtualenv() {
   VIRTUALENV_VERSION="virtualenv-12.0.7"

@@ -19,7 +19,9 @@ define(function(require, exports, module) {
                     code: script
                 }
             }
-            
+            // TODO can we add this to script.code?
+            // var setPath = 'C9_DIR="$HOME/.c9"\n'
+            //     + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n';
             var args = ["-c", script.code].concat(script.args || []);
             
             proc.pty("bash", {
