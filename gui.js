@@ -42,7 +42,7 @@ define(function(require, exports, module) {
                 exec: function(editor, args){ 
                     if (plugin.visible) return;
                     
-                    if (args.packages) {
+                    if (args && args.packages) {
                         args.packages.forEach(function(name){
                             installer.reinstall(name);
                         });

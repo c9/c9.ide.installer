@@ -56,12 +56,13 @@ define(function(require, exports, module) {
                     proc.installMode = vfs;
                     
                     // Wait until installer is done
-                    plugin.on("stop", function(){
-                        if (sessions.length == 0) {
+                    plugin.on("stop", function listen(e){
+                        if (e.session.package.name == "Cloud9 IDE") {
                             proc.installMode = false;
                             installChecked = true;
                             installCb(true);
                             installCb = null;
+                            plugin.off("stop", listen);
                         }
                     });
                 }
@@ -97,7 +98,6 @@ define(function(require, exports, module) {
                 });
             });
         }
-        
         
         function addPackageManager(name, implementation){
             automate.addCommand(NAMESPACE, name, implementation);
