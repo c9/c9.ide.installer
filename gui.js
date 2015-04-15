@@ -48,6 +48,7 @@ define(function(require, exports, module) {
                 
                 if (!plugin.visible) {
                     plugin.startPage = e.session.introduction ? intro : overview;
+                    plugin.allowClose = installer.checked;
                     plugin.show(true, { queue: false });
                 }
                 else {
@@ -464,6 +465,7 @@ define(function(require, exports, module) {
             drawn = null;
             datagrid = null;
             lastComplete = null;
+            executeList = null;
             sessions = [];
         });
         

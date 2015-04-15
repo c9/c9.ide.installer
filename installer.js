@@ -289,6 +289,11 @@ define(function(require, exports, module) {
              */
             get installed(){ return installed; },
             
+            /**
+             * 
+             */
+            get checked(){ return installChecked; },
+            
             _events: [
                 /**
                  * @event beforeStart
