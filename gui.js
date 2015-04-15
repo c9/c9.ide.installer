@@ -34,32 +34,40 @@ define(function(require, exports, module) {
             if (options.testing)
                 return plugin.show(true);
             
+            // menus.addMenuBypath
+            
             installer.on("beforeStart", beforeStart, plugin);
         }
         
         function beforeStart(e){
+            // Run headless if the user has previous chosen that
             if (settings.getBool("user/installer/@auto"))
-                return; // Run headless
+                return; 
             
             aborting = false;
             
-            var hasOptional = e.session.tasks.some(function(n){ 
+            var session = e.session;
+            var hasOptional = session.tasks.some(function(n){ 
                 return n.$options.optional;
             });
             
-            sessions.push(e.session);
+            sessions.push(session);
             
-            if (e.session.introduction || hasOptional) {
+            // Ignore sessions if previously decided not to install
+            var prefs = settings.getJson("state/installer");
+            
+            if (prefs[session.package.name] !== false
+              && (session.introduction || hasOptional)) {
                 draw();
                 
                 if (!plugin.visible) {
-                    plugin.startPage = e.session.introduction ? intro : overview;
+                    plugin.startPage = session.introduction ? intro : overview;
                     plugin.allowClose = installer.checked;
                     plugin.show(true, { queue: false });
                 }
                 else {
                     if (plugin.startPage == plugin.activePage) {
-                        if (e.session.introduction) {
+                        if (session.introduction) {
                             if (plugin.activePage != intro)
                                 plugin.previous();
                             
@@ -69,7 +77,7 @@ define(function(require, exports, module) {
                         updatePackages();
                     }
                     else {
-                        sessions.remove(e.session);
+                        sessions.remove(session);
                         
                         plugin.once("hide", function(){
                             beforeStart(e);
@@ -295,6 +303,9 @@ define(function(require, exports, module) {
             
             var root = { items: [] };
             
+            // Ignore sessions if previously decided not to install
+            var prefs = settings.getJson("state/installer");
+            
             sessions.forEach(function(session){
                 var node = { 
                     label: session.package.name, 
@@ -302,19 +313,22 @@ define(function(require, exports, module) {
                     session: session,
                     items: [],
                     isOpen: false,
-                    isChecked: true
+                    isChecked: prefs[session.package.name] !== false
                 };
                 root.items.push(node);
                 
+                var sessionState = prefs[session.package.name] || {};
                 var optional = false;
                 session.tasks.forEach(function(task){
-                    if (task.$options) {
-                        if (task.$options.isChecked === undefined)
-                            task.$options.isChecked = true;
-                        node.items.push(task.$options);
-                        if (task.$options.optional)
-                            optional = true;
-                    }
+                    var options = task.$options;
+                    if (!options) return;
+                    
+                    if (options.isChecked === undefined)
+                        options.isChecked = true;
+                    node.items.push(options);
+                    if (options.optional)
+                        optional = true;
+                    options.ignore = sessionState[options.name] || false;
                 });
                 
                 node.optional = optional;
@@ -332,7 +346,7 @@ define(function(require, exports, module) {
             complete.container.querySelector("blockquote").innerHTML = msg || lastComplete[1];
         }
         
-        function getSelectedSessions(ignored){
+        function getSelectedSessions(ignored, state){
             var sessions = [];
             
             var nodes = datagrid.root.items;
@@ -343,12 +357,15 @@ define(function(require, exports, module) {
                 
                 var session = node.session;
                 if (!include) {
+                    state[session.package.name] = false;
                     if (ignored) ignored.push(session);
                     return false;
                 }
                 
+                var sessionState = state[session.package.name] = {};
                 session.tasks.forEach(function(task){
                     task.$options.ignore = task.$options.isChecked === false;
+                    sessionState[task.$options.name] = task.$options.ignore;
                 });
                 
                 sessions.push(session);
@@ -378,13 +395,19 @@ define(function(require, exports, module) {
             spinner.style.display = "block";
             
             var aborted = [];
-            executeList = getSelectedSessions(aborted);
+            var state = {};
+            executeList = getSelectedSessions(aborted, state);
             sessions = [];
             
+            // Store selection in state settings
+            settings.setJson("state/installer", state);
+            
+            // Abort sessions that won't be run
             aborted.forEach(function(session){
                 session.abort();
             });
             
+            // Run all selected sessions
             async.eachSeries(executeList, function(session, next){
                 if (aborting) return next(new Error("Aborted"));
                 
@@ -473,6 +496,7 @@ define(function(require, exports, module) {
                 caption: "Always install everything", 
                 position: 150
             });
+            
             var lastState = {};
             plugin.getElement("cbAlways").on("afterchange", function(e){
                 if (e.value) {
