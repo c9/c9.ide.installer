@@ -5,13 +5,14 @@ module.exports = function(session, options){
     session.preInstallScript = require("text!./check-deps.sh");
     
     // Node.js
-    var NODEVERSION = "v0.10.28";
+    var NODEVERSION = "v0.12.0";
     var nodeName = "node-" + NODEVERSION + "-" 
         + options.platform + "-" + options.arch;
     
     session.install({
         "name": "Node.js", 
-        "description": "Node.js " + NODEVERSION
+        "description": "Node.js " + NODEVERSION,
+        optional: true
     }, [
         {
             "tar.gz": { 
@@ -31,7 +32,7 @@ module.exports = function(session, options){
         "description": "Pseudo Terminal support. Used by the Cloud9 Terminal",
         "cwd": "~/.c9"
     }, {
-        "npm": ["node-gyp", "pty.js@0.2.3"]
+        "npm": ["node-gyp", "pty.js@0.2.7-1"]
     }, function(done){
         session.exec(
             '"~/.c9/node/bin/node" -e "console.log(require(\'pty.js\'))"',
