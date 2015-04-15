@@ -117,10 +117,14 @@ define(function(require, exports, module) {
             automate.addCommandAlias.apply(this, args);
         }
         
-        function reinstall(packageName){
+        function reinstall(packageName, silent){
             if (packages[packageName]) {
+                if (!silent)
+                    emit("reinstall", { name: packageName });
+                
                 createSession(packageName, packages[packageName].version, 
                     packages[packageName].populate, null, true);
+                    
                 return true;
             }
             
@@ -149,7 +153,7 @@ define(function(require, exports, module) {
                 populate: populateSession 
             };
             
-            if (installed[packageName] == packageVersion)
+            if (!force && installed[packageName] == packageVersion)
                 return callback && callback();
             
             var session = automate.createSession(NAMESPACE);
@@ -260,6 +264,8 @@ define(function(require, exports, module) {
                     arch: arch
                 });
             });
+            
+            return session;
         }
         
         /***** Lifecycle *****/
@@ -279,6 +285,11 @@ define(function(require, exports, module) {
          * 
          **/
         plugin.freezePublicAPI({
+            /**
+             * 
+             */
+            get packages(){ return packages; },
+            
             /**
              * 
              */

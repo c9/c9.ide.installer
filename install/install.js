@@ -11,7 +11,8 @@ module.exports = function(session, options){
     
     session.install({
         "name": "Node.js", 
-        "description": "Node.js " + NODEVERSION
+        "description": "Node.js " + NODEVERSION,
+        optional: true
     }, [
         {
             "tar.gz": { 
@@ -29,7 +30,8 @@ module.exports = function(session, options){
     session.install({
         "name": "Pty.js",
         "description": "Pseudo Terminal support. Used by the Cloud9 Terminal",
-        "cwd": "~/.c9"
+        "cwd": "~/.c9",
+        optional: true
     }, {
         "npm": ["node-gyp", "pty.js@0.2.3"]
     }, function(done){
@@ -46,7 +48,8 @@ module.exports = function(session, options){
     session.install({
         "name": "tmux", 
         "description": "Tmux - the terminal multiplexer",
-        "cwd": "~/.c9"
+        "cwd": "~/.c9",
+        optional: true
     }, {
         // // TODO this causes `sudo: no tty present and no askpass program specified` errors
         // // and it somehow breaks "bash" install method too, also this needs to ensure

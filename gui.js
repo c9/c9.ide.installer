@@ -29,7 +29,7 @@ define(function(require, exports, module) {
         });
         
         var logDiv, spinner, lastOutput, datagrid, aborting;
-        var intro, overview, execute, complete;
+        var intro, overview, execute, complete, cbAlways;
         var sessions = [];
         var executeList;
         
@@ -49,8 +49,8 @@ define(function(require, exports, module) {
                         return;
                     }
                     
-                    plugin.show();
-                    plugin.gotoPage(overview);
+                    plugin.startPage = overview;
+                    plugin.show(true);
                 }
             }, plugin);
             
@@ -58,27 +58,70 @@ define(function(require, exports, module) {
                 command: "showinstaller"
             }), 38, plugin);
             
+            // Handle error state during headless installation
+            installer.on("stop", function(e){
+                if (plugin.visible || !e.error) return;
+                
+                plugin.startPage = execute;
+                plugin.show(true);
+                
+                plugin.showFinish = true;
+                plugin.showNext = false;
+                plugin.showPrevious = false;
+                plugin.showCancel = false;
+                  
+                spinner.style.display = "none";
+                logDiv.className = "log details";
+                
+                clear();
+                
+                sessions.forEach(function(session){
+                    if (session.output)
+                        log(session.output);
+                });
+                
+                logln("<br />" + e.error.message + "<br /><br />"
+                  + "<span class='error'>One or more errors occured. "
+                  + "Please try to resolve them and\n"
+                  + "restart Cloud9 or contact support@c9.io.</span>");
+            }, plugin);
+            
+            // Hook the creation of new sessions
             installer.on("beforeStart", beforeStart, plugin);
+            
+            // Make sure GUI picks up reinstalls
+            installer.on("reinstall", function(e){
+                var prefs = settings.getJson("state/installer");
+                var pref = prefs[e.name] || 0;
+                delete pref.$version;
+                settings.setJson("state/installer", prefs);
+            }, plugin);
         }
         
         function beforeStart(e){
-            // Run headless if the user has previous chosen that
-            if (settings.getBool("user/installer/@auto"))
-                return; 
+            var session = e.session;
             
+            // Reset aborting state
             aborting = false;
             
-            var session = e.session;
-            var hasOptional = session.tasks.some(function(n){ 
-                return n.$options.optional;
-            });
-            
+            // Add session to global array
             sessions.push(session);
             
-            // Ignore sessions if previously decided not to install
-            var prefs = settings.getJson("state/installer");
+            // Run headless if the user has previous chosen that
+            if (settings.getBool("user/installer/@auto")) {
+                // Clean up sessions array after session stopped
+                session.once("stop", function(){ sessions.remove(session); });
+                return;
+            }
             
-            if (prefs[session.package.name] !== false
+            var hasOptional = session.tasks.some(function(n){ 
+                return (n.$options || 0).optional;
+            });
+            
+            // Ignore sessions if previously decided not to install
+            var pref = settings.getJson("state/installer")[session.package.name] || 0;
+            
+            if (pref.$version !== session.package.version
               && (session.introduction || hasOptional)) {
                 draw();
                 
@@ -88,13 +131,13 @@ define(function(require, exports, module) {
                     plugin.show(true, { queue: false });
                 }
                 else {
-                    if (plugin.startPage == plugin.activePage) {
-                        if (session.introduction) {
-                            if (plugin.activePage != intro)
-                                plugin.previous();
+                    if (plugin.activePage.name != "execute" && plugin.activePage.name != "done") {
+                        // if (session.introduction) {
+                        //     if (plugin.activePage != intro)
+                        //        plugin.gotoPage(intro);
                             
-                            updateIntro();
-                        }
+                        //     updateIntro();
+                        // }
                         
                         updatePackages();
                     }
@@ -132,7 +175,7 @@ define(function(require, exports, module) {
             });
             intro.on("show", function(){
                 updateIntro();
-            })
+            });
             
             // Page Overview - givs an overview of the components to install
             overview = new WizardPage({ name: "overview" }, plugin);
@@ -276,6 +319,8 @@ define(function(require, exports, module) {
             // });
             
             plugin.on("next", function(e) {
+                cbAlways.show();
+                
                 var page = e.activePage;
                 if (page.name == "intro") {
                     return overview;
@@ -288,6 +333,7 @@ define(function(require, exports, module) {
                     plugin.showFinish = true;
                     plugin.showPrevious = false;
                     plugin.showNext = false;
+                    cbAlways.hide();
                     return complete;
                 }
             });
@@ -310,7 +356,7 @@ define(function(require, exports, module) {
             });
             
             plugin.on("finish", function(e){
-                var cbAlways = plugin.getElement("cbAlways");
+                cbAlways.show();
                 if (!cbAlways.checked || e.activePage.name == "complete") return;
                 runHeadless();
             });
@@ -338,30 +384,36 @@ define(function(require, exports, module) {
             var prefs = settings.getJson("state/installer");
             
             sessions.forEach(function(session){
+                var sessionState = prefs[session.package.name] || 0;
+                
                 var node = { 
                     label: session.package.name, 
                     description: "Version " + session.package.version,
                     session: session,
                     items: [],
-                    isOpen: false,
-                    isChecked: prefs[session.package.name] !== false
+                    isOpen: false
                 };
                 root.items.push(node);
                 
-                var sessionState = prefs[session.package.name] || {};
-                var optional = false;
+                var optional = false, checked = 0;
                 session.tasks.forEach(function(task){
                     var options = task.$options;
                     if (!options) return;
                     
-                    if (options.isChecked === undefined)
-                        options.isChecked = true;
-                    node.items.push(options);
-                    if (options.optional)
+                    if (options.optional) {
                         optional = true;
-                    options.ignore = sessionState[options.name] || false;
+                        options.ignore = sessionState[options.name] || false;
+                    }
+                    if (options.isChecked === undefined)
+                        options.isChecked = options.ignore ? false : true;
+                    checked += options.isChecked ? 1 : 0;
+                    node.items.push(options);
                 });
                 
+                // var ignoreVersion = sessionState.$version === session.package.version;
+                node.isChecked = checked == 0 
+                    ? false 
+                    : (checked == session.tasks.length ? true : -1);
                 node.optional = optional;
             });
             
@@ -386,23 +438,30 @@ define(function(require, exports, module) {
                     ? node.isChecked
                     : true;
                 
+                var sessionState;
                 var session = node.session;
+                if (state) sessionState = state[session.package.name] = {};
+                session.tasks.forEach(function(task){
+                    task.$options.ignore = task.$options.isChecked === false;
+                    if (sessionState)
+                        sessionState[task.$options.name] = task.$options.ignore;
+                });
+                
                 if (!include) {
-                    state[session.package.name] = false;
+                    if (sessionState)
+                        sessionState.$version = session.package.version;
                     if (ignored) ignored.push(session);
                     return false;
                 }
-                
-                var sessionState = state[session.package.name] = {};
-                session.tasks.forEach(function(task){
-                    task.$options.ignore = task.$options.isChecked === false;
-                    sessionState[task.$options.name] = task.$options.ignore;
-                });
                 
                 sessions.push(session);
             });
             
             return sessions;
+        }
+        
+        function clear(){
+            logDiv.innerHTML = "";
         }
         
         function log(msg) {
@@ -527,9 +586,10 @@ define(function(require, exports, module) {
                 caption: "Always install everything", 
                 position: 150
             });
+            cbAlways = plugin.getElement("cbAlways");
             
             var lastState = {};
-            plugin.getElement("cbAlways").on("afterchange", function(e){
+            cbAlways.on("afterchange", function(e){
                 if (e.value) {
                     ["showCancel", "showFinish", "showNext", "showPrevious"]
                         .forEach(function(n){ lastState[n] = plugin[n]; });
@@ -546,6 +606,16 @@ define(function(require, exports, module) {
                 
                 settings.set("user/installer/@auto", e.value);
             });
+        });
+        
+        plugin.on("show", function(){
+            // Make sure all items that were previously not installed are listed again.
+            var prefs = settings.getJson("state/installer");
+            for (var pkgName in prefs) {
+                if (!sessions.some(function(n){ return n.package.name == pkgName; })) {
+                    installer.reinstall(pkgName, true);
+                }
+            }
         });
         
         plugin.on("load", function(){
@@ -565,6 +635,7 @@ define(function(require, exports, module) {
             datagrid = null;
             lastComplete = null;
             executeList = null;
+            cbAlways = null;
             sessions = [];
         });
         
