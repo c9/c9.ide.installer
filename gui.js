@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Wizard", "WizardPage", "ui", "installer", "Datagrid", "settings",
-        "menus", "commands"
+        "menus", "commands", "Terminal"
     ];
     main.provides = ["installer.gui"];
     return main;
@@ -15,6 +15,7 @@ define(function(require, exports, module) {
         var menus = imports.menus;
         var settings = imports.settings;
         var Datagrid = imports.Datagrid;
+        var Terminal = imports.Terminal;
         
         var async = require("async");
         
@@ -29,7 +30,7 @@ define(function(require, exports, module) {
         });
         
         var logDiv, spinner, lastOutput, datagrid, aborting;
-        var intro, overview, execute, complete, cbAlways;
+        var intro, overview, execute, complete, cbAlways, terminal;
         var sessions = [];
         var executeList;
         
@@ -289,14 +290,13 @@ define(function(require, exports, module) {
                 logDiv = div.querySelector(".log");
                 spinner = div.querySelector(".progress");
                 
+                terminal = new Terminal({
+                    container: logDiv
+                });
+                
                 var cb = div.querySelector("#details");
                 cb.addEventListener("click", function(){
-                    if (cb.checked) {
-                        logDiv.className = "log details";
-                    }
-                    else {
-                        logDiv.className = "log";
-                    }
+                    toggleLogDetails(cb.checked);
                 });
                 
                 plugin.addOther(function(){
@@ -465,13 +465,19 @@ define(function(require, exports, module) {
         }
         
         function log(msg) {
-            (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
-            logDiv.scrollTop = logDiv.scrollHeight;
+            // (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
+            // logDiv.scrollTop = logDiv.scrollHeight;
+            terminal.write(msg);
         }
         
         function logln(msg) {
-            logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
-            logDiv.scrollTop = logDiv.scrollHeight;
+            // logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
+            // logDiv.scrollTop = logDiv.scrollHeight;
+            terminal.write(msg + "\n");
+        }
+        
+        function toggleLogDetails(show){
+            
         }
         
         function start(services, callback) {
