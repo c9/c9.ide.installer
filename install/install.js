@@ -33,14 +33,6 @@ module.exports = function(session, options){
         "cwd": "~/.c9"
     }, {
         "npm": ["node-gyp", "pty.js@0.2.7-1"]
-    }, function(done){
-        session.exec(
-            '"~/.c9/node/bin/node" -e "console.log(require(\'pty.js\'))"',
-            function(err, stdout, stderr){
-                if (!stdout || stdout.indexOf("createTerminal") == -1)
-                    err = new Error("Unknown exception installing pty.js: " + stdout);
-                done(err);
-            });
     });
     
     // Tmux
