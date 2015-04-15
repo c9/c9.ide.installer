@@ -26,7 +26,7 @@ define(function(require, exports, module) {
             
             proc.pty("bash", {
                 args: args,
-                cwd: options.cwd || null
+                cwd: options.cwd || "~/.c9"
             }, function(err, pty){
                 if (err) return callback(err);
                 
