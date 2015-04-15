@@ -19,10 +19,8 @@ define(function(require, exports, module) {
                     code: script
                 }
             }
-            // TODO can we add this to script.code?
-            // var setPath = 'C9_DIR="$HOME/.c9"\n'
-            //     + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n';
-            var args = ["-c", script.code + "\necho ?"].concat(script.args || []);
+            
+            var args = ["-c", script.code + "\necho ß"].concat(script.args || []);
             
             proc.pty("bash", {
                 args: args,
@@ -36,9 +34,9 @@ define(function(require, exports, module) {
                 pty.on("data", function(chunk){
                     // Working around PTY.js not having an exit code
                     // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
-                    if (chunk.indexOf("?") > -1) {
+                    if (chunk.indexOf("ß") > -1) {
                         done = true;
-                        chunk = chunk.replace("?", "");
+                        chunk = chunk.replace("ß", "");
                     }
                     
                     onData(chunk, pty);
