@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Wizard", "WizardPage", "ui", "installer", "Datagrid", "settings"
+        "Wizard", "WizardPage", "ui", "installer", "Datagrid", "settings",
+        "menus", "commands"
     ];
     main.provides = ["installer.gui"];
     return main;
@@ -10,6 +11,8 @@ define(function(require, exports, module) {
         var WizardPage = imports.WizardPage;
         var ui = imports.ui;
         var installer = imports.installer;
+        var commands = imports.commands;
+        var menus = imports.menus;
         var settings = imports.settings;
         var Datagrid = imports.Datagrid;
         
@@ -34,7 +37,26 @@ define(function(require, exports, module) {
             if (options.testing)
                 return plugin.show(true);
             
-            // menus.addMenuBypath
+            commands.addCommand({
+                name: "showinstaller",
+                exec: function(editor, args){ 
+                    if (plugin.visible) return;
+                    
+                    if (args.packages) {
+                        args.packages.forEach(function(name){
+                            installer.reinstall(name);
+                        });
+                        return;
+                    }
+                    
+                    plugin.show();
+                    plugin.gotoPage(overview);
+                }
+            }, plugin);
+            
+            menus.addItemByPath("Window/Installer...", new ui.item({
+                command: "showinstaller"
+            }), 38, plugin);
             
             installer.on("beforeStart", beforeStart, plugin);
         }
@@ -204,6 +226,15 @@ define(function(require, exports, module) {
             });
             overview.on("show", function(){
                 updatePackages();
+                
+                if (getSelectedSessions().length === 0) {
+                    plugin.showFinish = true;
+                    plugin.showNext = false;
+                }
+                else {
+                    plugin.showFinish = false;
+                    plugin.showNext = true;
+                }
             });
             
             // Page Execute - Show Log Output & Checkbox
