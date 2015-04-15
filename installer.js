@@ -134,11 +134,11 @@ define(function(require, exports, module) {
         function createSession(packageName, packageVersion, populateSession, callback, force) {
             if (!installed) {
                 return plugin.on("ready", 
-                    createSession.bind(this, packageName, packageVersion, populateSession, callback));
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
             }
             if (!c9.isReady) {
                 return c9.on("ready", 
-                    createSession.bind(this, packageName, packageVersion, populateSession, callback));
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
             }
             
             if (typeof packageVersion == "function") {

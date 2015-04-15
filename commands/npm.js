@@ -26,7 +26,8 @@ define(function(require, exports, module) {
                 + 'C9_DIR="$HOME/.c9"\n'
                 + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
                 + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
-                + NPM + ' install ' + task;
+                + NPM + ' install ' + task
+                + "\necho ß";
             
             proc.pty(binBash, {
                 args: ["-c", script],
@@ -34,15 +35,26 @@ define(function(require, exports, module) {
             }, function(err, pty){
                 if (err) return callback(err);
                 
+                var done = false;
+                
                 // Pipe the data to the onData function
                 pty.on("data", function(chunk){
+                    // Working around PTY.js not having an exit code
+                    // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
+                    if (chunk.indexOf("ß") > -1) {
+                        done = true;
+                        chunk = chunk.replace("ß", "");
+                    }
+                    
                     onData(chunk, pty);
                 });
                 
                 // When process exits call callback
                 pty.on("exit", function(code){
+                    if (!done && !code) code = 100;
+                    
                     if (!code) callback();
-                    else callback(new Error("Failed. Exit code " + code));
+                    else callback(new Error("Failed NPM. Exit code " + code));
                 });
             });
         }

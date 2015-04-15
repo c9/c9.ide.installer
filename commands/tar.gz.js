@@ -27,20 +27,31 @@ define(function(require, exports, module) {
             var target = task.target.replace(/^~/, c9.home);
             
             proc.pty(bashBin, {
-                args: ["-c", require("text!./tar.gz.sh"), source, target, task.url || "", task.dir || ""],
+                args: ["-c", require("text!./tar.gz.sh") + "\necho ß", source, target, task.url || "", task.dir || ""],
                 cwd: options.cwd || null
             }, function(err, pty){
                 if (err) return callback(err);
                 
+                var done = false;
+                
                 // Pipe the data to the onData function
                 pty.on("data", function(chunk){
+                    // Working around PTY.js not having an exit code
+                    // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
+                    if (chunk.indexOf("ß") > -1) {
+                        done = true;
+                        chunk = chunk.replace("ß", "");
+                    }
+                    
                     onData(chunk, pty);
                 });
                 
                 // When process exits call callback
                 pty.on("exit", function(code){
+                    if (!done && !code) code = 100;
+                    
                     if (!code) callback();
-                    else callback(new Error("Failed. Exit code " + code));
+                    else callback(new Error("Failed Tar.Gz. Exit code " + code));
                 });
             });
         }

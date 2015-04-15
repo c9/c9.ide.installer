@@ -22,7 +22,7 @@ define(function(require, exports, module) {
             // TODO can we add this to script.code?
             // var setPath = 'C9_DIR="$HOME/.c9"\n'
             //     + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n';
-            var args = ["-c", script.code].concat(script.args || []);
+            var args = ["-c", script.code + "\necho ?"].concat(script.args || []);
             
             proc.pty("bash", {
                 args: args,
@@ -30,15 +30,26 @@ define(function(require, exports, module) {
             }, function(err, pty){
                 if (err) return callback(err);
                 
+                var done = false;
+                
                 // Pipe the data to the onData function
                 pty.on("data", function(chunk){
+                    // Working around PTY.js not having an exit code
+                    // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
+                    if (chunk.indexOf("?") > -1) {
+                        done = true;
+                        chunk = chunk.replace("?", "");
+                    }
+                    
                     onData(chunk, pty);
                 });
                 
                 // When process exits call callback
                 pty.on("exit", function(code){
+                    if (!done && !code) code = 100;
+                    
                     if (!code) callback();
-                    else callback(new Error("Failed. Exit code " + code));
+                    else callback(new Error("Failed Bash. Exit code " + code));
                 });
             });
         }
