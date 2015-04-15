@@ -1,5 +1,7 @@
 define(function(require, exports, module) {
-    main.consumes = ["Wizard", "WizardPage", "ui", "installer", "Datagrid"];
+    main.consumes = [
+        "Wizard", "WizardPage", "ui", "installer", "Datagrid", "settings"
+    ];
     main.provides = ["installer.gui"];
     return main;
 
@@ -8,6 +10,7 @@ define(function(require, exports, module) {
         var WizardPage = imports.WizardPage;
         var ui = imports.ui;
         var installer = imports.installer;
+        var settings = imports.settings;
         var Datagrid = imports.Datagrid;
         
         var async = require("async");
@@ -35,6 +38,9 @@ define(function(require, exports, module) {
         }
         
         function beforeStart(e){
+            if (settings.getBool("user/installer/@auto"))
+                return; // Run headless
+            
             aborting = false;
             
             var hasOptional = e.session.tasks.some(function(n){ 
@@ -264,6 +270,12 @@ define(function(require, exports, module) {
                 }
             });
             
+            plugin.on("finish", function(e){
+                var cbAlways = plugin.getElement("cbAlways");
+                if (!cbAlways.checked || e.activePage.name == "complete") return;
+                runHeadless();
+            });
+            
             plugin.startPage = intro;
         }
         
@@ -443,10 +455,42 @@ define(function(require, exports, module) {
             }
         }
         
+        function runHeadless(){
+            sessions.forEach(function(session){
+                session.start(function(){}, true);
+            });
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("draw", function(){
             draw();
+            
+            // Add Checkbox to toggle Always Installation
+            plugin.createElement({ 
+                id: "cbAlways", 
+                type: "checkbox", 
+                caption: "Always install everything", 
+                position: 150
+            });
+            var lastState = {};
+            plugin.getElement("cbAlways").on("afterchange", function(e){
+                if (e.value) {
+                    ["showCancel", "showFinish", "showNext", "showPrevious"]
+                        .forEach(function(n){ lastState[n] = plugin[n]; });
+                    
+                    plugin.showCancel = false;
+                    plugin.showFinish = true;
+                    plugin.showNext = false;
+                    plugin.showPrevious = false;
+                }
+                else {
+                    ["showCancel", "showFinish", "showNext", "showPrevious"]
+                        .forEach(function(n){ plugin[n] = lastState[n]; });
+                }
+                
+                settings.set("user/installer/@auto", e.value);
+            });
         });
         
         plugin.on("load", function(){
