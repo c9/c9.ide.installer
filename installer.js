@@ -78,7 +78,10 @@ define(function(require, exports, module) {
             vfs.readfile(options.installPath.replace(c9.home, "~") + "/installed", {
                 encoding: "utf8"
             }, function(err, meta) {
-                if (err) return done(err);
+                if (err) {
+                    if (err.code == "ENOENT") done(err);
+                    return; // Wait for reconnect to try again
+                }
                 
                 var data = "";
                 var stream = meta.stream;

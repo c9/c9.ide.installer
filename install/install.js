@@ -11,8 +11,7 @@ module.exports = function(session, options){
     
     session.install({
         "name": "Node.js", 
-        "description": "Node.js " + NODEVERSION,
-        optional: true
+        "description": "Node.js " + NODEVERSION
     }, [
         {
             "tar.gz": { 
