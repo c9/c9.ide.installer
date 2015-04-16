@@ -86,17 +86,18 @@ define(function(require, exports, module) {
                 spinner.style.display = "none";
                 logDiv.className = "log details";
                 
-                clear();
+                terminal.clear();
                 
                 sessions.forEach(function(session){
                     if (session.output)
                         log(session.output);
                 });
                 
-                logln("\n" + e.error.message + "\n\n" + RED + 
+                logln("\n" + e.error.message + "\n\n" + RED
                       + "One or more errors occured. "
                       + "Please try to resolve them and\n"
-                      + "restart Cloud9 or contact support@c9.io." + RESETCOLOR);
+                      + "restart Cloud9 or contact support@c9.io." 
+                      + RESETCOLOR);
             }, plugin);
             
             // Hook the creation of new sessions
@@ -490,23 +491,13 @@ define(function(require, exports, module) {
             return sessions;
         }
         
-        function clear(){
-            logDiv.innerHTML = "";
-        }
-        
         function log(msg) {
             terminal.convertEol = !installer.checked;
-            
-            // (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
-            // logDiv.scrollTop = logDiv.scrollHeight;
             terminal.write(msg);
         }
         
         function logln(msg, color, unset) {
             terminal.convertEol = true;
-            
-            // logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
-            // logDiv.scrollTop = logDiv.scrollHeight;
             terminal.write((color || "") + msg + (color ? unset || RESETCOLOR : "") + "\n");
         }
         
@@ -569,10 +560,11 @@ define(function(require, exports, module) {
                 plugin.showCancel = false;
                 
                 if (err) {
-                    logln("\n" + err.message + "\n\n" + RED + 
+                    logln("\n" + err.message + "\n\n" + RED
                       + "One or more errors occured. "
                       + "Please try to resolve them and\n"
-                      + "restart Cloud9 or contact support@c9.io." + RESETCOLOR);
+                      + "restart Cloud9 or contact support@c9.io." 
+                      + RESETCOLOR);
                       
                     spinner.style.display = "none";
                     logDiv.className = "log details";
@@ -644,6 +636,9 @@ define(function(require, exports, module) {
                     installer.reinstall(pkgName, true);
                 }
             }
+            
+            // Start with a clear terminal
+            terminal && terminal.clear();
         });
         
         plugin.on("load", function(){
