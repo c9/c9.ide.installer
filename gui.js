@@ -63,6 +63,7 @@ define(function(require, exports, module) {
                     draw();
                     plugin.startPage = overview;
                     plugin.show(true);
+                    addUnselectedPackages();
                 }
             }, plugin);
             
@@ -149,6 +150,7 @@ define(function(require, exports, module) {
                     plugin.startPage = session.introduction ? intro : overview;
                     plugin.allowClose = installer.checked;
                     plugin.show(true, { queue: false });
+                    addUnselectedPackages();
                 }
                 else {
                     if (plugin.activePage.name != "execute" && plugin.activePage.name != "done") {
@@ -456,29 +458,31 @@ define(function(require, exports, module) {
         
         function getSelectedSessions(ignored, state){
             var sessions = [];
-            
+            var start = settings.getJson("state/installer");
             var nodes = datagrid.root.items;
+            
             nodes.filter(function(node){
-                var include = typeof node.isChecked == "boolean"
-                    ? node.isChecked
-                    : true;
-                
                 var sessionState;
                 var session = node.session;
                 if (state) sessionState = {};
                 
-                var hasIgnore;
+                var hasNotInstalled = 0;
+                var totalIgnored = 0;
                 session.tasks.forEach(function(task){
-                    task.$options.ignore = task.$options.isChecked === false;
-                    if (task.$options.ignore) hasIgnore = true;
+                    var alreadyInstalled = (start && start[session.package.name] || 0)[task.$options.name] === false;
+                    task.$options.ignore = alreadyInstalled || task.$options.isChecked === false;
+                    if (task.$options.ignore) {
+                        if (!alreadyInstalled) hasNotInstalled++;
+                        totalIgnored++;
+                    }
                     if (sessionState)
-                        sessionState[task.$options.name] = task.$options.ignore;
+                        sessionState[task.$options.name] = alreadyInstalled ? false : task.$options.ignore;
                 });
                 
-                if (state && hasIgnore)
+                if (hasNotInstalled != 0 && state)
                     state[session.package.name] = sessionState;
                 
-                if (!include) {
+                if (totalIgnored == session.tasks.length) {
                     if (sessionState)
                         sessionState.$version = session.package.version;
                     if (ignored) ignored.push(session);
@@ -520,9 +524,6 @@ define(function(require, exports, module) {
             var state = {};
             executeList = getSelectedSessions(aborted, state);
             sessions = [];
-            
-            // Store selection in state settings
-            settings.setJson("state/installer", state);
             
             // Abort sessions that won't be run
             aborted.forEach(function(session){
@@ -576,6 +577,9 @@ define(function(require, exports, module) {
                     logln("");
                     logln("Installation Completed.", LIGHTBlUE);
                     
+                    // Store selection in state settings
+                    settings.setJson("state/installer", state);
+                    
                     spinner.style.display = "none";
                     
                     setCompleteMessage("Installation Complete",
@@ -586,6 +590,16 @@ define(function(require, exports, module) {
                     plugin.showNext = true;
                 }
             });
+        }
+        
+        function addUnselectedPackages(){
+            // Make sure all items that were previously not installed are listed again.
+            var prefs = settings.getJson("state/installer");
+            for (var pkgName in prefs) {
+                if (!sessions.some(function(n){ return n.package.name == pkgName; })) {
+                    installer.reinstall(pkgName, true);
+                }
+            }
         }
         
         function runHeadless(){
@@ -629,14 +643,6 @@ define(function(require, exports, module) {
         });
         
         plugin.on("show", function(){
-            // Make sure all items that were previously not installed are listed again.
-            var prefs = settings.getJson("state/installer");
-            for (var pkgName in prefs) {
-                if (!sessions.some(function(n){ return n.package.name == pkgName; })) {
-                    installer.reinstall(pkgName, true);
-                }
-            }
-            
             // Start with a clear terminal
             terminal && terminal.clear();
         });
