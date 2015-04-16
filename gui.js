@@ -19,6 +19,16 @@ define(function(require, exports, module) {
         
         var async = require("async");
         
+        var RED = "\x1b[01;31m";
+        var GREEN = "\x1b[01;32m";
+        var YELLOW = "\x1b[01;33m";
+        var BLUE = "\x1b[01;34m";
+        var MAGENTA = "\x1b[01;35m";
+        var LIGHTBlUE = "\x1b[01;94m";
+        var RESETCOLOR = "\x1b[0m";
+        var BOLD = "\x1b[01;1m";
+        var UNBOLD = "\x1b[01;21m";
+        
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
@@ -81,10 +91,10 @@ define(function(require, exports, module) {
                         log(session.output);
                 });
                 
-                logln("<br />" + e.error.message + "<br /><br />"
-                  + "<span class='error'>One or more errors occured. "
-                  + "Please try to resolve them and\n"
-                  + "restart Cloud9 or contact support@c9.io.</span>");
+                logln("\n" + e.error.message + "\n\n" + RED + 
+                      + "One or more errors occured. "
+                      + "Please try to resolve them and\n"
+                      + "restart Cloud9 or contact support@c9.io." + RESETCOLOR);
             }, plugin);
             
             // Hook the creation of new sessions
@@ -472,12 +482,12 @@ define(function(require, exports, module) {
             terminal.write(msg);
         }
         
-        function logln(msg) {
+        function logln(msg, color, unset) {
             terminal.convertEol = !installer.checked;
             
             // logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
             // logDiv.scrollTop = logDiv.scrollHeight;
-            terminal.write(msg + "\n");
+            terminal.write((color || "") + msg + (color ? unset || RESETCOLOR : "") + "\n");
         }
         
         function toggleLogDetails(show){
@@ -491,7 +501,8 @@ define(function(require, exports, module) {
             plugin.showNext = false;
             
             // Start Installation
-            logln("Starting Installation...");
+            logln("Installation Started", LIGHTBlUE);
+            logln("");
             spinner.style.display = "block";
             
             var aborted = [];
@@ -512,8 +523,9 @@ define(function(require, exports, module) {
                 if (aborting) return next(new Error("Aborted"));
                 
                 session.on("run", function(){
-                    logln("Package " + session.package.name 
-                        + " " + session.package.version);
+                    var heading = "Package " + session.package.name 
+                        + " " + session.package.version;
+                    logln(heading + "\n" + Array(heading.length + 1).join("-"));
                 });
                 
                 var lastOptions;
@@ -521,7 +533,7 @@ define(function(require, exports, module) {
                     if (lastOptions != e.options) {
                         lastOptions = e.options;
                         if (e.options.name)
-                            logln("Installing " + e.options.name);
+                            logln("Installing " + e.options.name, BLUE);
                     }
                 });
                 session.on("data", function(e){
@@ -537,10 +549,10 @@ define(function(require, exports, module) {
                 plugin.showCancel = false;
                 
                 if (err) {
-                    logln("<br />" + err.message + "<br /><br />"
-                      + "<span class='error'>One or more errors occured. "
+                    logln("\n" + err.message + "\n\n" + RED + 
+                      + "One or more errors occured. "
                       + "Please try to resolve them and\n"
-                      + "restart Cloud9 or contact support@c9.io.</span>");
+                      + "restart Cloud9 or contact support@c9.io." + RESETCOLOR);
                       
                     spinner.style.display = "none";
                     logDiv.className = "log details";
@@ -549,6 +561,9 @@ define(function(require, exports, module) {
                         plugin.showFinish = true;
                 }
                 else {
+                    logln("");
+                    logln("Installation Completed.", LIGHTBlUE);
+                    
                     spinner.style.display = "none";
                     
                     setCompleteMessage("Installation Complete",
@@ -559,23 +574,6 @@ define(function(require, exports, module) {
                     plugin.showNext = true;
                 }
             });
-            
-            function progress(message, output, error) {
-                if (!message.trim()) return;
-                if (output) {
-                    if (!lastOutput) {
-                        log("<div class='output'></div>");
-                        lastOutput = logDiv.lastChild;
-                    }
-                    if (error)
-                        message = "<span class='error'>" + message + "</span>";
-                    log(message);
-                }
-                else {
-                    lastOutput = null;
-                    logln(message);
-                }
-            }
         }
         
         function runHeadless(){
@@ -634,6 +632,7 @@ define(function(require, exports, module) {
         
         plugin.on("unload", function(){
             aborting = false;
+            terminal = null;
             logDiv = null;
             spinner = null;
             lastOutput = null;

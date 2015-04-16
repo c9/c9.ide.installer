@@ -91,6 +91,7 @@
     .execute .log .ace_editor{
         background-color: transparent !important;
         color: #333 !important;
+        font-family: Menlo, 'Ubuntu Mono', Consolas, source-code-pro, monospace, Monaco;
     }
     
     .execute .log .output{
