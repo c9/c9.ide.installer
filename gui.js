@@ -73,7 +73,8 @@ define(function(require, exports, module) {
             
             // Handle error state during headless installation
             installer.on("stop", function(e){
-                if (plugin.visible || !e.error) return;
+                if (plugin.visible || !e.error || e.error.message == "Aborted") 
+                    return;
                 
                 draw();
                 plugin.startPage = execute;
@@ -116,6 +117,13 @@ define(function(require, exports, module) {
         function beforeStart(e){
             var session = e.session;
             
+            // If there's already a session for that package running, abort this one.
+            var pkgName = session.package.name;
+            if (sessions.some(function(n){ return n.package.name == pkgName; })) {
+                session.abort();
+                return false;
+            }
+            
             // Reset aborting state
             aborting = false;
             
@@ -148,7 +156,6 @@ define(function(require, exports, module) {
                 
                 if (!plugin.visible) {
                     plugin.startPage = session.introduction ? intro : overview;
-                    plugin.allowClose = installer.checked;
                     plugin.show(true, { queue: false });
                     addUnselectedPackages();
                 }
@@ -667,6 +674,10 @@ define(function(require, exports, module) {
             executeList = null;
             cbAlways = null;
             sessions = [];
+        });
+        
+        plugin.on("show", function(){
+            plugin.allowClose = installer.checked;
         });
         
         plugin.on("resize", function(){
