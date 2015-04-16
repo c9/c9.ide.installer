@@ -86,7 +86,7 @@ define(function(require, exports, module) {
                 plugin.showCancel = false;
                   
                 spinner.style.display = "none";
-                logDiv.className = "log details";
+                toggleLogDetails(true);
                 
                 terminal.clear();
                 
@@ -130,12 +130,20 @@ define(function(require, exports, module) {
             // Add session to global array
             sessions.push(session);
             
-            // Run headless if the user has previous chosen that
-            if (settings.getBool("user/installer/@auto")) {
-                // Clean up sessions array after session stopped
-                session.once("stop", function(){ sessions.remove(session); });
-                return;
+            // Clean up sessions array after session stopped
+            session.once("stop", function(){ sessions.remove(session); });
+            
+            // Make sure there is an entry for this plugin so it's remembered
+            // if it fails - so it can be reinstalled
+            var state = settings.getJson("state/installer");
+            if (!state[session.package.name]) {
+                state[session.package.name] = {};
+                settings.setJson("state/installer", state);
             }
+            
+            // Run headless if the user has previous chosen that
+            if (settings.getBool("user/installer/@auto"))
+                return;
             
             // Ignore sessions if previously decided not to install
             var pref = settings.getJson("state/installer")[session.package.name] || 0;
@@ -502,6 +510,10 @@ define(function(require, exports, module) {
             return sessions;
         }
         
+        function clear(){
+            terminal.clear();
+        }
+        
         function log(msg) {
             terminal.convertEol = !installer.checked;
             terminal.write(msg);
@@ -530,7 +542,7 @@ define(function(require, exports, module) {
             var aborted = [];
             var state = {};
             executeList = getSelectedSessions(aborted, state);
-            sessions = [];
+            // sessions = [];
             
             // Abort sessions that won't be run
             aborted.forEach(function(session){
@@ -649,11 +661,6 @@ define(function(require, exports, module) {
             });
         });
         
-        plugin.on("show", function(){
-            // Start with a clear terminal
-            terminal && terminal.clear();
-        });
-        
         plugin.on("load", function(){
             load();
         });
@@ -677,6 +684,9 @@ define(function(require, exports, module) {
         });
         
         plugin.on("show", function(){
+            // Start with a clear terminal
+            terminal && terminal.clear();
+            
             plugin.allowClose = installer.checked;
         });
         
