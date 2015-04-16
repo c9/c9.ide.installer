@@ -348,7 +348,7 @@ define(function(require, exports, module) {
                     plugin.showNext = false;
                     return complete;
                 }
-            });
+            }, plugin);
             
             plugin.on("cancel", function(e) {
                 if (e.activePage.name == "execute") {
@@ -365,7 +365,7 @@ define(function(require, exports, module) {
                             session.abort();
                     });
                 }
-            });
+            }, plugin);
             
             plugin.on("finish", function(e){
                 if (e.activePage.name == "overview") {
@@ -383,7 +383,7 @@ define(function(require, exports, module) {
                     return;
                 
                 runHeadless();
-            });
+            }, plugin);
             
             if (!plugin.startPage)
                 plugin.startPage = intro;
