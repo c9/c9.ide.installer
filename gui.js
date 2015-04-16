@@ -292,7 +292,7 @@ define(function(require, exports, module) {
                 
                 terminal = new Terminal({
                     container: logDiv
-                });
+                }, plugin);
                 
                 var cb = div.querySelector("#details");
                 cb.addEventListener("click", function(){
@@ -326,6 +326,7 @@ define(function(require, exports, module) {
                     return overview;
                 }
                 else if (page.name == "overview") {
+                    cbAlways.hide();
                     setTimeout(start);
                     return execute;
                 }
@@ -333,7 +334,6 @@ define(function(require, exports, module) {
                     plugin.showFinish = true;
                     plugin.showPrevious = false;
                     plugin.showNext = false;
-                    cbAlways.hide();
                     return complete;
                 }
             });
@@ -465,12 +465,16 @@ define(function(require, exports, module) {
         }
         
         function log(msg) {
+            terminal.convertEol = !installer.checked;
+            
             // (lastOutput || logDiv).insertAdjacentHTML("beforeend", msg);
             // logDiv.scrollTop = logDiv.scrollHeight;
             terminal.write(msg);
         }
         
         function logln(msg) {
+            terminal.convertEol = !installer.checked;
+            
             // logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
             // logDiv.scrollTop = logDiv.scrollHeight;
             terminal.write(msg + "\n");
@@ -643,6 +647,10 @@ define(function(require, exports, module) {
             executeList = null;
             cbAlways = null;
             sessions = [];
+        });
+        
+        plugin.on("resize", function(){
+            terminal && terminal.resize();
         });
         
         /***** Register and define API *****/

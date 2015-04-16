@@ -20,51 +20,51 @@ PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH";
 
 compile_tmux(){
   cd "$C9_DIR"
-  echo ":Compiling libevent..."
+  echo "Compiling libevent..."
   tar xzf libevent-2.0.21-stable.tar.gz
   rm libevent-2.0.21-stable.tar.gz
   cd libevent-2.0.21-stable
-  echo ":Configuring Libevent"
+  echo "Configuring Libevent"
   ./configure --prefix="$C9_DIR/local"
-  echo ":Compiling Libevent"
+  echo "Compiling Libevent"
   make
-  echo ":Installing libevent"
+  echo "Installing libevent"
   make install
  
   cd "$C9_DIR"
-  echo ":Compiling ncurses..."
+  echo "Compiling ncurses..."
   tar xzf ncurses-5.9.tar.gz
   rm ncurses-5.9.tar.gz
   cd ncurses-5.9
-  echo ":Configuring Ncurses"
+  echo "Configuring Ncurses"
   ./configure --prefix="$C9_DIR/local" --without-tests --without-cxx
-  echo ":Compiling Ncurses"
+  echo "Compiling Ncurses"
   make
-  echo ":Installing Ncurses"
+  echo "Installing Ncurses"
   make install
  
   cd "$C9_DIR"
-  echo ":Compiling tmux..."
+  echo "Compiling tmux..."
   tar xzf tmux-1.9.tar.gz
   rm tmux-1.9.tar.gz
   cd tmux-1.9
-  echo ":Configuring Tmux"
+  echo "Configuring Tmux"
   ./configure CFLAGS="-I$C9_DIR/local/include -I$C9_DIR/local/include/ncurses" CPPFLAGS="-I$C9_DIR/local/include -I$C9_DIR/local/include/ncurses" LDFLAGS="-static-libgcc -L$C9_DIR/local/lib" LIBEVENT_CFLAGS="-I$C9_DIR/local/include" LIBEVENT_LIBS="-static -L$C9_DIR/local/lib -levent" LIBS="-L$C9_DIR/local/lib/ncurses -lncurses" --prefix="$C9_DIR/local"
-  echo ":Compiling Tmux"
+  echo "Compiling Tmux"
   make
-  echo ":Installing Tmux"
+  echo "Installing Tmux"
   make install
 }
 
 tmux_download(){
-  echo ":Downloading tmux source code"
-  echo ":N.B: This will take a while. To speed this up install tmux 1.9 manually on your machine and restart this process."
+  echo "Downloading tmux source code"
+  echo "N.B: This will take a while. To speed this up install tmux 1.9 manually on your machine and restart this process."
   
-  echo ":Downloading Libevent..."
+  echo "Downloading Libevent..."
   $DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/libevent-2.0.21-stable.tar.gz
-  echo ":Downloading Ncurses..."
+  echo "Downloading Ncurses..."
   $DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/ncurses-5.9.tar.gz
-  echo ":Downloading Tmux..."
+  echo "Downloading Tmux..."
   $DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/tmux-1.9.tar.gz
 }
 
@@ -84,15 +84,14 @@ check_tmux_version(){
   fi
 }
 
-echo :Installing TMUX
 mkdir -p "$C9_DIR/bin"
 
 if check_tmux_version $C9_DIR/bin/tmux; then
-  echo ':Existing tmux version is up-to-date'
+  echo 'Existing tmux version is up-to-date'
 
 # If we can support tmux 1.9 or detect upgrades, the following would work:
 elif has "tmux" && check_tmux_version `which tmux`; then
-  echo ':A good version of tmux was found, creating a symlink'
+  echo 'A good version of tmux was found, creating a symlink'
   ln -sf $(which tmux) "$C9_DIR"/bin/tmux
   exit 0
 
@@ -108,7 +107,7 @@ else
   # Linux
   else
     if ! has "make"; then
-      echo ":Could not find make. Please install make and try again."
+      echo "Could not find make. Please install make and try again."
       exit 100;
     fi
   

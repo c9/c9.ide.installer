@@ -72,7 +72,7 @@
         right : 0px;
         bottom : 0px;
         background : #153649;
-        padding : 20px 20px 40px 20px;
+        padding : 20px 20px 20px 20px;
         overflow : auto;
         color : @installer-log-color;
         line-height: 1.4em;
@@ -86,6 +86,11 @@
         border : @installer-log-border;
         border-color : @installer-log-border-color;
         box-shadow : @installer-log-box-shadow;
+    }
+    
+    .execute .log .ace_editor{
+        background-color: transparent !important;
+        color: #333 !important;
     }
     
     .execute .log .output{
