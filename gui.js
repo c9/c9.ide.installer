@@ -60,6 +60,7 @@ define(function(require, exports, module) {
                         return;
                     }
                     
+                    draw();
                     plugin.startPage = overview;
                     plugin.show(true);
                 }
@@ -73,6 +74,7 @@ define(function(require, exports, module) {
             installer.on("stop", function(e){
                 if (plugin.visible || !e.error) return;
                 
+                draw();
                 plugin.startPage = execute;
                 plugin.show(true);
                 
@@ -125,15 +127,21 @@ define(function(require, exports, module) {
                 return;
             }
             
+            // Ignore sessions if previously decided not to install
+            var pref = settings.getJson("state/installer")[session.package.name] || 0;
+            if (pref.$version === session.package.version) {
+                if (plugin.visible && plugin.activePage.name != "execute" && plugin.activePage.name != "done")
+                    updatePackages();
+                else
+                    sessions.remove(session);
+                return false;
+            }
+            
             var hasOptional = session.tasks.some(function(n){ 
                 return (n.$options || 0).optional;
             });
-            
-            // Ignore sessions if previously decided not to install
-            var pref = settings.getJson("state/installer")[session.package.name] || 0;
-            
-            if (pref.$version !== session.package.version
-              && (session.introduction || hasOptional)) {
+                
+            if (session.introduction || hasOptional) {
                 draw();
                 
                 if (!plugin.visible) {
@@ -143,13 +151,6 @@ define(function(require, exports, module) {
                 }
                 else {
                     if (plugin.activePage.name != "execute" && plugin.activePage.name != "done") {
-                        // if (session.introduction) {
-                        //     if (plugin.activePage != intro)
-                        //        plugin.gotoPage(intro);
-                            
-                        //     updateIntro();
-                        // }
-                        
                         updatePackages();
                     }
                     else {
@@ -366,12 +367,25 @@ define(function(require, exports, module) {
             });
             
             plugin.on("finish", function(e){
+                if (e.activePage.name == "overview") {
+                    // Store selection in state settings
+                    var state = {};
+                    getSelectedSessions(null, state);
+                    settings.setJson("state/installer", state);
+                }
+                
+                // Prepare for next time wizard is shown
                 cbAlways.show();
-                if (!cbAlways.checked || e.activePage.name == "complete") return;
+                
+                // Only process remaining if always is on
+                if (!cbAlways.checked || e.activePage.name == "complete") 
+                    return;
+                
                 runHeadless();
             });
             
-            plugin.startPage = intro;
+            if (!plugin.startPage)
+                plugin.startPage = intro;
         }
         
         /***** Methods *****/
@@ -450,12 +464,18 @@ define(function(require, exports, module) {
                 
                 var sessionState;
                 var session = node.session;
-                if (state) sessionState = state[session.package.name] = {};
+                if (state) sessionState = {};
+                
+                var hasIgnore;
                 session.tasks.forEach(function(task){
                     task.$options.ignore = task.$options.isChecked === false;
+                    if (task.$options.ignore) hasIgnore = true;
                     if (sessionState)
                         sessionState[task.$options.name] = task.$options.ignore;
                 });
+                
+                if (state && hasIgnore)
+                    state[session.package.name] = sessionState;
                 
                 if (!include) {
                     if (sessionState)
@@ -483,7 +503,7 @@ define(function(require, exports, module) {
         }
         
         function logln(msg, color, unset) {
-            terminal.convertEol = !installer.checked;
+            terminal.convertEol = true;
             
             // logDiv.insertAdjacentHTML("beforeend", msg + "<br />");
             // logDiv.scrollTop = logDiv.scrollHeight;
