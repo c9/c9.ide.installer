@@ -39,7 +39,7 @@ define(function(require, exports, module) {
             height: 400
         });
         
-        var logDiv, spinner, lastOutput, datagrid, aborting;
+        var logDiv, spinner, datagrid, aborting;
         var intro, overview, execute, complete, cbAlways, terminal;
         var sessions = [];
         var executeList;
@@ -686,7 +686,6 @@ define(function(require, exports, module) {
             terminal = null;
             logDiv = null;
             spinner = null;
-            lastOutput = null;
             intro = null;
             overview = null;
             execute = null;
