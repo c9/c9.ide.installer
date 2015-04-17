@@ -12,7 +12,7 @@ has() {
 
 if [ ! "$SOURCE" ] || [ ! "$URL" ] || [ ! "$TARGET" ]; then
     echo "Error: missing source and/or target" >&2;
-    exit 1
+    exit 10
 fi
 
 if [ "$DIR" ]; then
@@ -33,7 +33,7 @@ if [ "$URL" ]; then
         DOWNLOAD="curl -sSOL"
     else
         echo "Error: you need curl or wget to proceed" >&2;
-        exit 1
+        exit 20
     fi
 
     echo "Downloading $URL"

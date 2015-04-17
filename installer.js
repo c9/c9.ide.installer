@@ -58,10 +58,10 @@ define(function(require, exports, module) {
                     // Wait until installer is done
                     plugin.on("stop", function listen(e){
                         if (e.session.package.name == "Cloud9 IDE") {
-                            if (!isInstalled("Cloud9 IDE")) {
-                                reinstall("Cloud9 IDE");
-                                return;
-                            }
+                            // if (!isInstalled("Cloud9 IDE")) {
+                            //     reinstall("Cloud9 IDE");
+                            //     return;
+                            // }
                             
                             proc.installMode = false;
                             installChecked = true;
