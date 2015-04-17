@@ -324,7 +324,6 @@ define(function(require, exports, module) {
                 }, plugin);
                 
                 terminal.on("input", function(e){
-                    debugger;
                     var data = e.data;
                     sessions.some(function(session){
                         if (session.executing) {
