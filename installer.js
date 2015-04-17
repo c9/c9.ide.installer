@@ -58,6 +58,11 @@ define(function(require, exports, module) {
                     // Wait until installer is done
                     plugin.on("stop", function listen(e){
                         if (e.session.package.name == "Cloud9 IDE") {
+                            if (!isInstalled("Cloud9 IDE")) {
+                                reinstall("Cloud9 IDE");
+                                return;
+                            }
+                            
                             proc.installMode = false;
                             installChecked = true;
                             installCb(true);
@@ -118,6 +123,32 @@ define(function(require, exports, module) {
             }
             
             automate.addCommandAlias.apply(this, args);
+        }
+        
+        function isInstalled(pkgName, pkgVersion, callback){
+            if (typeof pkgVersion == "function")
+                callback = pkgVersion, pkgVersion = undefined;
+            
+            if (!installed && callback) {
+                return plugin.once("ready", function(){
+                    if (isInstalled(pkgName, pkgVersion, callback))
+                        callback();
+                });
+            }
+            
+            var boolInstalled = installed[pkgName] 
+                && (pkgVersion ? installed[pkgName] == pkgVersion : true);
+            
+            if (!boolInstalled && callback) {
+                plugin.on("stop", function listen(){
+                    if (isInstalled(pkgName, pkgVersion)) {
+                        callback();
+                        plugin.off("stop", listen);
+                    }
+                });
+            }
+            
+            return boolInstalled;
         }
         
         function reinstall(packageName, silent){
@@ -326,6 +357,11 @@ define(function(require, exports, module) {
                  */
                 "each"
             ],
+            
+            /**
+             * 
+             */
+            isInstalled: isInstalled,
             
             /**
              * 

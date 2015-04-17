@@ -97,7 +97,7 @@ define(function(require, exports, module) {
                 
                 logln("\n" + e.error.message + "\n\n" + RED
                       + "One or more errors occured. "
-                      + "Please try to resolve them and\n"
+                      + "Please try to resolve them and "
                       + "restart Cloud9 or contact support@c9.io." 
                       + RESETCOLOR);
             }, plugin);
@@ -323,6 +323,17 @@ define(function(require, exports, module) {
                     container: logDiv
                 }, plugin);
                 
+                terminal.on("input", function(e){
+                    var data = e.data;
+                    sessions.some(function(session){
+                        if (session.executing) {
+                            if (session.process)
+                                session.process.write(data);
+                            return true;
+                        }
+                    });
+                });
+                
                 var cb = div.querySelector("#details");
                 cb.addEventListener("click", function(){
                     toggleLogDetails(cb.checked);
@@ -331,6 +342,8 @@ define(function(require, exports, module) {
                 plugin.addOther(function(){
                     div.innerHTML = "";
                     div.parentNode.removeChild(div);
+                    
+                    terminal.destroy();
                 });
             });
             
@@ -484,14 +497,17 @@ define(function(require, exports, module) {
                 var hasNotInstalled = 0;
                 var totalIgnored = 0;
                 session.tasks.forEach(function(task){
-                    var alreadyInstalled = (start && start[session.package.name] || 0)[task.$options.name] === false;
-                    task.$options.ignore = alreadyInstalled || task.$options.isChecked === false;
-                    if (task.$options.ignore) {
+                    var options = task.$options || 0;
+                    var alreadyInstalled = (start && start[session.package.name] || 0)[options.name] === false;
+                    
+                    options.ignore = alreadyInstalled || options.isChecked === false;
+                    if (options.ignore) {
                         if (!alreadyInstalled) hasNotInstalled++;
                         totalIgnored++;
                     }
+                    
                     if (sessionState)
-                        sessionState[task.$options.name] = alreadyInstalled ? false : task.$options.ignore;
+                        sessionState[options.name] = alreadyInstalled ? false : options.ignore;
                 });
                 
                 if (hasNotInstalled != 0 && state)
@@ -582,7 +598,7 @@ define(function(require, exports, module) {
                 if (err) {
                     logln("\n" + err.message + "\n\n" + RED
                       + "One or more errors occured. "
-                      + "Please try to resolve them and\n"
+                      + "Please try to resolve them and "
                       + "restart Cloud9 or contact support@c9.io." 
                       + RESETCOLOR);
                       
