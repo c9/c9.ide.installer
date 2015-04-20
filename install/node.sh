@@ -52,12 +52,12 @@ configure_python() {
     installed=
     if has virtualenv; then
       # try global virtualenv first
-      (virtualenv "$C9_DIR/python") && installed=1
+      (virtualenv -p python2.7  "$C9_DIR/python") && installed=1
     fi
     
     if ! [ "$installed" ]; then
       download_virtualenv
-      "$PYTHON" virtualenv/virtualenv.py "$C9_DIR/python"
+      "$PYTHON" virtualenv/virtualenv.py -p python2.7 "$C9_DIR/python"
     fi
     if [[ -f "$C9_DIR/python/bin/python2" ]]; then
       PYTHON="$C9_DIR/python/bin/python2"
