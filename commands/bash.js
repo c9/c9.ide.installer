@@ -17,14 +17,14 @@ define(function(require, exports, module) {
             if (typeof script == "string") {
                 script = {
                     code: script
-                }
+                };
             }
             
             var args = ["-c", script.code + "\necho ß"].concat(script.args || []);
             
             proc.pty("bash", {
                 args: args,
-                cwd: options.cwd || "~/.c9"
+                cwd: options.cwd
             }, function(err, pty){
                 if (err) return callback(err);
                 
