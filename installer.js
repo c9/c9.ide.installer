@@ -126,6 +126,9 @@ define(function(require, exports, module) {
         }
         
         function isInstalled(pkgName, pkgVersion, callback){
+            if (!installSelfCheck)
+                return true;
+            
             if (typeof pkgVersion == "function")
                 callback = pkgVersion, pkgVersion = undefined;
             
