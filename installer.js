@@ -289,7 +289,7 @@ define(function(require, exports, module) {
                 proc.execFile("uname", { args: ["-m"] }, function(e, p) {
                     if (/x86_64/.test(p)) p = "x64";
                     else if (/i.*86/) p = "x86";
-                    else if (/armv6l|armv7l/) p = "x86";
+                    else if (/armv6l|armv7l/) p = "arm-pi";
                     arch = p || undefined;
                     emit.sticky("arch", arch);
                 });

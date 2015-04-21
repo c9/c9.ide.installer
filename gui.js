@@ -36,7 +36,8 @@ define(function(require, exports, module) {
             allowClose: true,
             class: "installer",
             resizable: true,
-            height: 400
+            height: 400,
+            width: 650
         });
         
         var logDiv, spinner, datagrid, aborting;
