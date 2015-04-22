@@ -8,7 +8,8 @@ define(function(require, exports, module) {
         var installer = imports.installer;
         var proc = imports.proc;
         
-        var binBash = options.binBash || "bash";
+        var util = require("./util");
+        var bashBin = options.bashBin || "bash";
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -18,36 +19,15 @@ define(function(require, exports, module) {
         function execute(task, options, onData, callback) {
             var script = 'set -e\n'
                 + 'sudo yum install ' + task
-                + "\necho ß";
+                + "\n";
             
-            proc.pty(binBash, {
-                args: ["-c", script],
-                cwd: options.cwd || null
-            }, function(err, pty){
-                if (err) return callback(err);
-                
-                var done = false;
-                
-                // Pipe the data to the onData function
-                pty.on("data", function(chunk){
-                    // Working around PTY.js not having an exit code
-                    // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
-                    if (chunk.indexOf("ß") > -1) {
-                        done = true;
-                        chunk = chunk.replace("ß", "");
-                    }
-                    
-                    onData(chunk, pty);
-                });
-                
-                // When process exits call callback
-                pty.on("exit", function(code){
-                    if (!done && !code) code = 100;
-                    
-                    if (!code) callback();
-                    else callback(new Error("Failed CentOS. Exit code " + code));
-                });
-            });
+            util.ptyExec({
+                name: "CentOS",
+                bash: bashBin,
+                proc: proc,
+                code: script,
+                cwd: options.cwd,
+            }, onData, callback);
         }
         
         var available;
