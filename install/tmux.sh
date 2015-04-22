@@ -93,7 +93,6 @@ if check_tmux_version $C9_DIR/bin/tmux; then
 elif has "tmux" && check_tmux_version `which tmux`; then
   echo 'A good version of tmux was found, creating a symlink'
   ln -sf $(which tmux) "$C9_DIR"/bin/tmux
-  exit 0
 
 # If tmux is not present or at the wrong version, we will install it
 else
