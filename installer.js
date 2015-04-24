@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin", "automate", "vfs", "c9", "proc", "fs"];
+    main.consumes = ["Plugin", "automate", "vfs", "c9", "proc", "fs", "error_handler"];
     main.provides = ["installer"];
     return main;
 
@@ -7,8 +7,9 @@ define(function(require, exports, module) {
         var Plugin = imports.Plugin;
         var automate = imports.automate;
         var c9 = imports.c9;
-        var proc = imports.proc;
         var fs = imports.fs;
+        var proc = imports.proc;
+        var errorHandler = imports.error_handler;
         
         /***** Initialization *****/
         
@@ -305,6 +306,54 @@ define(function(require, exports, module) {
             return session;
         }
         
+        function ptyExec(options, onData, callback) {
+            // Working around PTY.js not having an exit code
+            // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
+            // wrap script in a function and use subshell to prevent exit 0 skipping echo ß
+            var script = 'fcn() {\n'
+                + options.code
+                + '\n}'
+                + '\n(echo 1 | fcn "$@") && echo ß';
+                
+            proc.pty(options.bash || "bash", {
+                args: ["-c", script].concat(options.args || []),
+                cwd: options.cwd || null
+            }, function(err, pty){
+                if (err) return callback(err);
+                
+                var done = false;
+                var buffer = "";
+                
+                // Pipe the data to the onData function
+                pty.on("data", function(chunk){
+                    buffer += chunk;
+                    if (chunk.indexOf("ß") > -1) {
+                        done = true;
+                        chunk = chunk.replace("ß", "");
+                    }
+                    onData(chunk, pty);
+                });
+                
+                // When process exits call callback
+                pty.on("exit", function(code){
+                    if (!done && !code) code = "E_MISSING_END_MARKER";
+                    
+                    if (code) {
+                        errorHandler.log("install error", {
+                            output: buffer,
+                            script: script,
+                            name: options.name,
+                            args: options.args,
+                            code: code
+                        });
+                    }
+                    
+                    if (!code) callback();
+                    else callback(new Error("Failed " + options.name + ". Exit code " + code));
+                });
+            });
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -390,6 +439,11 @@ define(function(require, exports, module) {
              * 
              */
             addPackageManagerAlias: addPackageManagerAlias,
+            
+            /**
+             * 
+             */
+            ptyExec: ptyExec,
         });
         
         register(null, {

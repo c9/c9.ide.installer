@@ -8,7 +8,7 @@ define(function(require, exports, module) {
         var installer = imports.installer;
         var proc = imports.proc;
         var c9 = imports.c9;
-        var util = require("./util");
+        
         var bashBin = options.bashBin || "bash";
         
         var plugin = new Plugin("Ajax.org", main.consumes);
@@ -26,7 +26,7 @@ define(function(require, exports, module) {
             var source = (task.source || "-1").replace(/^~/, c9.home);
             var target = task.target.replace(/^~/, c9.home);
             
-            util.ptyExec({
+            installer.ptyExec({
                 name: "Tar.Gz.",
                 bash: bashBin,
                 proc: proc,

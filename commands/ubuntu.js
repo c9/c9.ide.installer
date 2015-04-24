@@ -8,7 +8,6 @@ define(function(require, exports, module) {
         var installer = imports.installer;
         var proc = imports.proc;
         
-        var util = require("./util");
         var bashBin = options.bashBin || "bash";
         
         var plugin = new Plugin("Ajax.org", main.consumes);
@@ -21,10 +20,9 @@ define(function(require, exports, module) {
                 + 'sudo apt-get install ' + task
                 + "\n";
             
-            util.ptyExec({
+            installer.ptyExec({
                 name: "Ubuntu",
                 bash: bashBin,
-                proc: proc,
                 code: script,
                 cwd: options.cwd,
             }, onData, callback);

@@ -8,7 +8,6 @@ define(function(require, exports, module) {
         var installer = imports.installer;
         var proc = imports.proc;
         
-        var util = require("./util");
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         /**
@@ -21,9 +20,8 @@ define(function(require, exports, module) {
                 };
             }
             
-            util.ptyExec({
+            installer.ptyExec({
                 name: "Bash",
-                proc: proc,
                 code: script.code,
                 args: script.args,
                 cwd: options.cwd,
