@@ -11,7 +11,7 @@ elif [[ `cat /proc/version 2>/dev/null` =~ Ubuntu|Debian ]]; then
   OS="DEBIAN"
 fi
 
-for DEP in make gcc; do
+for DEP in "make" "gcc" "g++"; do
   if ! has $DEP; then
     echo "Error: please install $DEP to proceed" >&2
     if [ "$OS" == "CentOS" ]; then
