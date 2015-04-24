@@ -34,8 +34,15 @@ define(function(require, exports, module) {
         
         function load() {
             imports.vfs.on("beforeConnect", function(e) {
-                if (!installSelfCheck || installChecked)
+                if (installChecked)
                     return e.done(false);
+                
+                if (!installSelfCheck) {
+                    installChecked = true;
+                    e.done(false);
+                    simpleInstallRead();
+                    return;
+                }
                 
                 installCb = e.done;
                 
@@ -49,6 +56,34 @@ define(function(require, exports, module) {
         }
         
         /***** Methods *****/
+        
+        function simpleInstallRead(){
+            var path = options.installPath.replace(c9.home, "~") + "/installed";
+            fs.readFile(path, function(err, data) {
+                if (err) {
+                    if (err.code == "ENOENT")
+                        installed = {};
+                    else
+                        c9.once("connect", simpleInstallRead);
+                    return;
+                }
+                
+                parse(data);
+                emit.sticky("ready", installed);
+            });
+        }
+        
+        function parse(data){
+            if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
+                data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
+            
+            installed = {};
+            data.split("\n").forEach(function(line){
+                if (!line) return;
+                var p = line.split("@");
+                installed[p[0]] = parseInt(p[1], 10);
+            });
+        }
         
         function readFromDisk(vfs){
             function done(err){
@@ -95,16 +130,7 @@ define(function(require, exports, module) {
                 var stream = meta.stream;
                 stream.on("data", function(chunk){ data += chunk; });
                 stream.on("end", function(){ 
-                    if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
-                        data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
-                    
-                    installed = {};
-                    data.split("\n").forEach(function(line){
-                        if (!line) return;
-                        var p = line.split("@");
-                        installed[p[0]] = parseInt(p[1], 10);
-                    });
-                    
+                    parse(data);
                     done();
                 });
             });
@@ -237,10 +263,10 @@ define(function(require, exports, module) {
                 callback && callback(err);
                 
                 // Update installed file
-                if (!err) {
+                if (!err && force !== 2) {
                     installed[packageName] = packageVersion;
                     var contents = Object.keys(installed).map(function(item){
-                        return item + "@" + installed[item]
+                        return item + "@" + installed[item];
                     }).join("\n");
                     fs.writeFile("~/.c9/installed", contents, function(){});
                 }

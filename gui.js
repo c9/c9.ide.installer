@@ -43,7 +43,7 @@ define(function(require, exports, module) {
         });
         
         var logDiv, spinner, datagrid, aborting;
-        var intro, overview, execute, complete, cbAlways, terminal;
+        var intro, overview, execute, complete, cbAlways, terminal, title;
         var sessions = [];
         var executeList, forceUpdate;
         
@@ -93,10 +93,17 @@ define(function(require, exports, module) {
                 
                 terminal.clear();
                 
-                sessions.forEach(function(session){
-                    if (session.output)
-                        log(session.output);
-                });
+                var session = e.session;
+                var heading = "Package " + session.package.name 
+                    + " " + session.package.version;
+                logln(heading + "\n" + Array(heading.length + 1).join("-") + "\n");
+                title.innerHTML = "Installation Failed";
+                
+                if (session.lastTask.$options && session.lastTask.$options.name)
+                    logln("Installing " + session.lastTask.$options.name + "\n", BLUE);
+                
+                if (session.output)
+                    log(session.output);
                 
                 logln("\n" + e.error.message + "\n\n" + RED
                       + "One or more errors occured. "
@@ -321,6 +328,7 @@ define(function(require, exports, module) {
                 
                 logDiv = div.querySelector(".log");
                 spinner = div.querySelector(".progress");
+                title = div.querySelector(".title");
                 
                 terminal = new Terminal({
                     container: logDiv
@@ -584,6 +592,8 @@ define(function(require, exports, module) {
                     var heading = "Package " + session.package.name 
                         + " " + session.package.version;
                     logln(heading + "\n" + Array(heading.length + 1).join("-"));
+                    
+                    title.innerHTML = "Installing " + session.package.name;
                 });
                 
                 var lastOptions;
@@ -607,6 +617,8 @@ define(function(require, exports, module) {
                 plugin.showCancel = false;
                 
                 if (err) {
+                    title.innerHTML = "Installation Failed";
+                    
                     logln("\n" + err.message + "\n\n" + RED
                       + "One or more errors occured. "
                       + "Please try to resolve them and "
@@ -634,6 +646,7 @@ define(function(require, exports, module) {
                 else {
                     logln("");
                     logln("Installation Completed.", LIGHTBlUE);
+                    title.innerHTML = "Installation Completed";
                     
                     // Store selection in state settings
                     settings.setJson("state/installer", state);
