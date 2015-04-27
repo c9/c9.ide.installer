@@ -145,7 +145,7 @@ define(function(require, exports, module) {
             }
             
             // Run headless if the user has previous chosen that
-            if (settings.getBool("user/installer/@auto"))
+            if (settings.getBool("user/installer/@auto") && !plugin.visible)
                 return;
             
             // Ignore sessions if previously decided not to install
@@ -403,9 +403,6 @@ define(function(require, exports, module) {
             }, plugin);
             
             plugin.on("finish", function(e){
-                if (installer.waitForSuccess)
-                    installer.waitForSuccess = false;
-                
                 if (e.activePage.name == "overview") {
                     // Store selection in state settings
                     var state = {};
@@ -417,10 +414,16 @@ define(function(require, exports, module) {
                 cbAlways.show();
                 
                 // Only process remaining if always is on
-                if (!cbAlways.checked || e.activePage.name == "complete") 
+                if (!cbAlways.checked || e.activePage.name == "complete") {
+                    if (installer.waitForSuccess)
+                        installer.waitForSuccess = false;
                     return;
+                }
                 
-                runHeadless();
+                runHeadless(function(){
+                    if (installer.waitForSuccess)
+                        installer.waitForSuccess = false;
+                });
             }, plugin);
             
             if (!plugin.startPage)
@@ -657,10 +660,10 @@ define(function(require, exports, module) {
             }
         }
         
-        function runHeadless(){
+        function runHeadless(callback){
             async.eachSeries(sessions, function(session, next){
                 session.start(next, true);
-            });
+            }, callback);
         }
         
         /***** Lifecycle *****/
