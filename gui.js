@@ -29,6 +29,8 @@ define(function(require, exports, module) {
         var BOLD = "\x1b[01;1m";
         var UNBOLD = "\x1b[01;21m";
         
+        installer.waitForSuccess = true;
+        
         /***** Initialization *****/
         
         var plugin = new Wizard("Ajax.org", main.consumes, {
@@ -43,7 +45,7 @@ define(function(require, exports, module) {
         var logDiv, spinner, datagrid, aborting;
         var intro, overview, execute, complete, cbAlways, terminal;
         var sessions = [];
-        var executeList;
+        var executeList, forceUpdate;
         
         function load(){
             if (options.testing)
@@ -169,7 +171,7 @@ define(function(require, exports, module) {
                     addUnselectedPackages();
                 }
                 else {
-                    if (plugin.activePage.name != "execute" && plugin.activePage.name != "done") {
+                    if (plugin.activePage.name != "execute" && plugin.activePage.name != "done" || forceUpdate) {
                         updatePackages();
                     }
                     else {
@@ -357,9 +359,11 @@ define(function(require, exports, module) {
                 plugin.showFinish = true;
             });
             
-            // plugin.on("previous", function(e) {
-            //     var page = e.activePage;
-            // });
+            plugin.on("previous", function(e) {
+                var page = e.activePage;
+                if (page.name == "overview")
+                    clear();
+            });
             
             plugin.on("next", function(e) {
                 cbAlways.show();
@@ -399,6 +403,9 @@ define(function(require, exports, module) {
             }, plugin);
             
             plugin.on("finish", function(e){
+                if (installer.waitForSuccess)
+                    installer.waitForSuccess = false;
+                
                 if (e.activePage.name == "overview") {
                     // Store selection in state settings
                     var state = {};
@@ -606,6 +613,18 @@ define(function(require, exports, module) {
                     spinner.style.display = "none";
                     logDiv.className = "log details";
                     
+                    // Restart sessions
+                    sessions = [];
+                    forceUpdate = true;
+                    executeList.forEach(function(session){
+                        installer.createSession(session.package.name, 
+                            session.package.version, 
+                            installer.packages[session.package.name].populate);
+                    });
+                    addUnselectedPackages();
+                    forceUpdate = false;
+                    
+                    plugin.showPrevious = true;
                     if (plugin.activePage.name == "execute")
                         plugin.showFinish = true;
                 }

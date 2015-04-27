@@ -23,6 +23,7 @@ define(function(require, exports, module) {
         var packages = {};
         var sessions = [];
         var installed = false;
+        var waitForSuccess = false;
         var installCb, arch;
         
         // Check that all the dependencies are installed
@@ -58,21 +59,20 @@ define(function(require, exports, module) {
                     // to a special mode of proc
                     proc.installMode = vfs;
                     
+                    plugin.once("success", function(){
+                        proc.installMode = false;
+                        installChecked = true;
+                        installCb(true);
+                        installCb = null;
+                    });
+                    
                     // Wait until installer is done
                     plugin.on("stop", function listen(e){
-                        if (e.session.package.name == "Cloud9 IDE") {
-                            // if (!isInstalled("Cloud9 IDE")) {
-                            //     reinstall("Cloud9 IDE");
-                            //     return;
-                            // }
-                            
-                            proc.installMode = false;
-                            installChecked = true;
-                            installCb(true);
-                            installCb = null;
+                        if (e.session.package.name == "Cloud9 IDE" && (!e.error || !waitForSuccess)) {
+                            plugin.waitForSuccess = false;
                             plugin.off("stop", listen);
                         }
-                    });
+                    }, plugin);
                 }
                 else {
                     installChecked = true;
@@ -370,6 +370,7 @@ define(function(require, exports, module) {
             installChecked = false;
             installed = false;
             installCb = arch = undefined;
+            waitForSuccess = false;
         });
         
         /***** Register and define API *****/
@@ -397,6 +398,12 @@ define(function(require, exports, module) {
              * 
              */
             get checked(){ return installChecked; },
+            
+            /**
+             * @ignore
+             */
+            get waitForSuccess(){ return waitForSuccess; },
+            set waitForSuccess(v){ waitForSuccess = v; if (!v) emit("success"); },
             
             _events: [
                 /**
