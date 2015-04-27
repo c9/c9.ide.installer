@@ -264,7 +264,7 @@ define(function(require, exports, module) {
                         if (toChildren[label]) {
                             var all = true;
                             var hasUnchecked = parent.items.some(function(n){ 
-                                return nodes.indexOf(n) == -1 && !n.isChecked 
+                                return nodes.indexOf(n) == -1 && !n.isChecked;
                             });
                             if (hasUnchecked) parent.isChecked = true;
                             
@@ -658,8 +658,8 @@ define(function(require, exports, module) {
         }
         
         function runHeadless(){
-            sessions.forEach(function(session){
-                session.start(function(){}, true);
+            async.eachSeries(sessions, function(session, next){
+                session.start(next, true);
             });
         }
         
