@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = ["Plugin", "installer", "proc", "c9"];
-    main.provides = ["installer.tar.gz"];
+    main.provides = ["installer.zip"];
     return main;
 
     function main(options, imports, register) {
@@ -14,8 +14,8 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         /**
-         * Extracts a tar.gz package to a target directory
-         * Optionally downloads a tar.gz package from a url
+         * Extracts a zip package to a target directory
+         * Optionally downloads a zip package from a url
          */
         function execute(task, options, onData, callback) {
             if (!task.source && !task.url) {
@@ -27,10 +27,10 @@ define(function(require, exports, module) {
             var target = task.target.replace(/^~/, c9.home);
             
             installer.ptyExec({
-                name: "Tar.Gz",
+                name: "Zip",
                 bash: bashBin,
                 proc: proc,
-                code: require("text!./tar.gz.sh"),
+                code: require("text!./zip.sh"),
                 args: [source, target, task.url || "", task.dir || ""],
                 cwd: options.cwd
             }, onData, callback);
@@ -42,16 +42,16 @@ define(function(require, exports, module) {
         }
         
         plugin.on("load", function() {
-            installer.addPackageManager("tar.gz", plugin);
+            installer.addPackageManager("zip", plugin);
         });
         plugin.on("unload", function() {
-            installer.removePackageManager("tar.gz");
+            installer.removePackageManager("zip");
         });
         
         plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
         register(null, {
-            "installer.tar.gz": plugin
+            "installer.zip": plugin
         });
     }
 });
