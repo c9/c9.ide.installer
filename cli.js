@@ -24,7 +24,7 @@ define(function(require, exports, module) {
         var BOLD = "\x1b[01;1m";
         var UNBOLD = "\x1b[01;21m";
         
-        var currentSession;
+        var currentSession, verbose = true;
         
         /***** Initialization *****/
         
@@ -53,17 +53,26 @@ define(function(require, exports, module) {
             currentSession = session;
             
             // Start Installation
-            logln("Installation Started", LIGHTBlUE);
-            logln("");
+            if (verbose) {
+                logln("Installation Started", LIGHTBlUE);
+                logln("");
+            }
+            else {
+                log("Installing Dependencies...", LIGHTBlUE);
+            }
             
             session.on("run", function(){
+                if (!verbose) return;
+                
                 var heading = "Package " + session.package.name 
-                    + " " + session.package.version;
+                    + " " + (session.package.version || "");
                 logln(heading + "\n" + Array(heading.length + 1).join("-"));
             });
             
             var lastOptions;
             session.on("each", function(e){
+                if (!verbose) return;
+                
                 if (lastOptions != e.options) {
                     lastOptions = e.options;
                     if (e.options.name)
@@ -71,6 +80,8 @@ define(function(require, exports, module) {
                 }
             });
             session.on("data", function(e){
+                if (!verbose) return;
+                
                 log(e.data);
             });
             
@@ -79,22 +90,26 @@ define(function(require, exports, module) {
                     logln("\n" + err.message + "\n\n" + RED
                       + "One or more errors occured. "
                       + "Please try to resolve them and "
-                      + "restart Cloud9 or contact support@c9.io." 
+                      + "try again or contact support@c9.io. " 
+                      + (!verbose ? "Use --verbose to see more output." : "")
                       + RESETCOLOR);
                 }
-                else {
+                else if (verbose) {
                     logln("");
                     logln("Installation Completed.", LIGHTBlUE);
+                }
+                else {
+                    logln(" [Done]", LIGHTBlUE);
                 }
             }, true);
         }
         
-        function log(msg) {
-            process.stdout.write(msg);
+        function log(msg, color, unset) {
+            logln(msg, color, unset, true)
         }
         
-        function logln(msg, color, unset) {
-            process.stdout.write((color || "") + msg + (color ? unset || RESETCOLOR : "") + "\n");
+        function logln(msg, color, unset, noLineEnd) {
+            process.stdout.write((color || "") + msg + (color ? unset || RESETCOLOR : "") + (noLineEnd ? "" : "\n"));
         }
         
         /***** Lifecycle *****/
@@ -104,11 +119,14 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function() {
             currentSession = null;
+            verbose = true;
         });
         
         /***** Register and define API *****/
         
         plugin.freezePublicAPI({
+            get verbose(){ return verbose },
+            set verbose(v){ verbose = v; }
         });
         
         register(null, {

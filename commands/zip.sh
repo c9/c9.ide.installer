@@ -36,8 +36,8 @@ if [ "$URL" ]; then
         exit 20
     fi
 
-    echo "Downloading $URL"
-    $DOWNLOAD "$URL"
+    echo "Downloading... $URL"
+    $DOWNLOAD "$URL" 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
     
     SOURCE="$TARGET/$(basename $URL)"
 fi
@@ -49,21 +49,24 @@ if [ `dirname $SOURCE` != $TARGET ]; then
 fi
 
 # Unpack source
-echo -n "Unpacking $SOURCE"
-unzip -o "$SOURCE"
-echo " [Done]"
+echo "Unpacking... $SOURCE"
+unzip -q -o "$SOURCE" 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
 
 # Delete package
 rm -Rf $SOURCE
 
 # Move directory
 if [ "$DIR" ]; then
-    echo -n "Merging $TARGET/$DIR in $TARGET"
-    mv "$DIR" "/tmp/$DIR"
-    mv "/tmp/$DIR/"* .
-    set +e
-    mv "/tmp/$DIR/."* . 2>/dev/null
-    set -e
-    rmdir "/tmp/$DIR"
-    echo " [Done]"
+    echo "Merging... $TARGET/$DIR in $TARGET"
+    
+    merge() {
+        mv "$DIR" "/tmp/$DIR"
+        mv "/tmp/$DIR/"* .
+        set +e
+        mv "/tmp/$DIR/."* . 2>/dev/null
+        set -e
+        rmdir "/tmp/$DIR"
+    }
+    
+    merge 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
 fi

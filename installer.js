@@ -27,7 +27,9 @@ define(function(require, exports, module) {
         
         // Check that all the dependencies are installed
         var VERSION = 1;
-        createSession("Cloud9 IDE", VERSION, require("./install/install"));
+        
+        if (!options.cli)
+            createSession("Cloud9 IDE", VERSION, require("./install/install"));
         
         function load() {
             imports.vfs.on("beforeConnect", function(e) {
@@ -170,13 +172,18 @@ define(function(require, exports, module) {
         }
         
         function createSession(packageName, packageVersion, populateSession, callback, force) {
-            if (!installed) {
-                return plugin.on("ready", 
-                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
+            if (options.cli) {
+                force = true;
             }
-            if (!c9.isReady) {
-                return c9.on("ready", 
-                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
+            else {
+                if (!installed) {
+                    return plugin.on("ready", 
+                        createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
+                }
+                if (!c9.isReady) {
+                    return c9.on("ready", 
+                        createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
+                }
             }
             
             if (typeof packageVersion == "function") {
@@ -225,7 +232,7 @@ define(function(require, exports, module) {
                 emit("start", { session: session }); 
             });
             session.on("stop", function(err){
-                sessions.remove(session);
+                sessions.splice(sessions.indexOf(session), 1);
                 emit("stop", { session: session, error: err });
                 callback && callback(err);
                 
@@ -280,7 +287,7 @@ define(function(require, exports, module) {
             });
             
             session.on("unload", function(){
-                sessions.remove(session);
+                sessions.splice(sessions.indexOf(session), 1);
             }, plugin);
             
             sessions.push(session);
