@@ -17,7 +17,7 @@ define(function(require, exports, module) {
          */
         function execute(task, options, onData, callback) {
             var script = 'set -e\n'
-                + 'sudo yum install ' + task
+                + 'sudo yum -y install ' + task
                 + "\n";
             
             installer.ptyExec({

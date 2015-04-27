@@ -17,7 +17,7 @@ define(function(require, exports, module) {
          */
         function execute(task, options, onData, callback) {
             var script = 'set -e\n'
-                + 'sudo apt-get install ' + task
+                + 'sudo apt-get -y install ' + task
                 + "\n";
             
             installer.ptyExec({
