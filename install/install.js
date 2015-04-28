@@ -46,7 +46,8 @@ module.exports = function(session, options){
         // "install": [
         //     {
         //         "ubuntu": "tmux",
-        //         "centos": "tmux"
+        //         "centos": "tmux",
+        //         "brew": "tmux"
         //     },
         //     {
         //         "bash": require("text!./tmux.sh")
