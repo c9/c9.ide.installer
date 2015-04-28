@@ -185,9 +185,9 @@ define(function(require, exports, module) {
             
             ui.insertCss(require("text!./style.css"), options.staticPrefix, plugin);
             
-            plugin.on("show", function(e) {
+            settings.on("user/installer/@auto", function(){
                 cbAlways.setAttribute("checked", settings.get("user/installer/@auto"));
-            });
+            }, plugin);
             
             // Page Intro - displays intro texts
             intro = new WizardPage({ name: "intro" }, plugin);
