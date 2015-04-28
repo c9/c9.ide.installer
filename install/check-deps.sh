@@ -5,42 +5,65 @@ has() {
   return $?
 }
 
-if [[ `cat /etc/issue 2>/dev/null` =~ CentOS ]]; then
-  OS="CentOS"
-elif [[ `cat /proc/version 2>/dev/null` =~ Ubuntu|Debian ]]; then
-  OS="DEBIAN"
-fi
 
-for DEP in "make" "gcc" "g++"; do
-  if ! has $DEP; then
-    echo "Error: please install $DEP to proceed" >&2
-    if [ "$OS" == "CentOS" ]; then
-      echo "To do so, log into your machine and type 'yum groupinstall -y development'" >&2
-    elif [ "$OS" == "DEBIAN" ]; then
-      echo "To do so, log into your machine and type 'sudo apt-get install build-essential'" >&2
+check_deps() {
+  local MISSING
+  local OS
+  local CMD
+
+  if [[ `cat /etc/issue 2>/dev/null` =~ CentOS ]]; then
+    OS="CentOS"
+  elif [[ `cat /proc/version 2>/dev/null` =~ Ubuntu|Debian ]]; then
+    OS="DEBIAN"
+  fi
+  
+  for DEP in "make" "gcc" "g++"; do
+    if ! has $DEP; then 
+      MISSING="$MISSING, $DEP"
     fi
-    ERR=1
+  done
+  
+  if [ "$MISSING" ]; then
+    
+    if [ "$OS" == "CentOS" ]; then
+      CMD="sudo yum groupinstall -y development"
+    elif [ "$OS" == "DEBIAN" ]; then
+      CMD="sudo apt-get install -y build-essential"
+    fi
+    
+    if [ "$CMD" ]; then
+      echo "running '$CMD' to install missing dependencies: $MISSING"
+      if [ $($CMD) ]; then
+        MISSING=; 
+      else
+        echo "ERROR: failed to install '$MISSING'"
+      fi
+    else
+      echo "ERROR: failed to install '$MISSING'"
+    fi
   fi
-done
-
-# CentOS
-if [ "$OS" == "CentOS" ]; then
-  if ! yum list installed glibc-static >/dev/null 2>&1; then
-    echo "Error: please install glibc-static to proceed" >&2
-    echo "To do so, log into your machine and type 'yum install glibc-static'" >&2
-    ERR=1
+  
+  # CentOS
+  if [ "$OS" == "CentOS" ]; then
+    if ! yum list installed glibc-static >/dev/null 2>&1; then
+      echo "Error: please install glibc-static to proceed"
+      echo "To do so, log into your machine and type 'yum install glibc-static'"
+      MISSING=1
+    fi
   fi
-fi
+  
+  if which python2.7 &> /dev/null; then
+    PYTHONVERSION="2.7"
+  else
+    PYTHONVERSION=`python --version 2>&1`
+  fi
+  
+  if [[ $PYTHONVERSION != *2.7* ]]; then
+    echo "Python version 2.7 is required to install pty.js. Please install python 2.7 and try again. You can find more information on how to install Python in the docs: https://docs.c9.io/ssh_workspaces.html"
+    MISSING=1
+  fi
+  
+  if [ "$MISSING" ]; then exit 1; fi
+}
 
-if which python2.7 &> /dev/null; then
-  PYTHONVERSION="2.7"
-else
-  PYTHONVERSION=`python --version 2>&1`
-fi
-
-if [[ $PYTHONVERSION != *2.7* ]]; then
-  echo "Python version 2.7 is required to install pty.js. Please install python 2.7 and try again. You can find more information on how to install Python in the docs: https://docs.c9.io/ssh_workspaces.html"
-  ERR=1
-fi
-
-if [ "$ERR" ]; then exit 1; fi
+check_deps
