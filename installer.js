@@ -11,6 +11,8 @@ define(function(require, exports, module) {
         var proc = imports.proc;
         var errorHandler = imports.error_handler;
         
+        var DEBUG = typeof location != undefined && location.search.indexOf("debug=3") != -1;
+        
         /***** Initialization *****/
         
         var plugin = new Plugin("Ajax.org", main.consumes);
@@ -343,10 +345,13 @@ define(function(require, exports, module) {
             // Working around PTY.js not having an exit code
             // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
             // wrap script in a function and use subshell to prevent exit 0 skipping echo ß
-            var script = 'fcn() {\n'
-                + options.code
-                + '\n}'
-                + '\n(echo 1 | fcn "$@") && echo ß';
+            // make sure sudo is called with correct passwd and 
+            var script = (DEBUG ? "set -x\n" : "")
+                + 'export TERM=xterm\n' // helps with debian dialog error on apt-get install
+                + 'fcn() {\n'+ options.code + '\n}\n'
+                + 'sudo(){ /usr/bin/sudo -S -p "###[sudo] password for %p: " "$@" ; }\n'
+                + 'exit() { if [ "$1" == "0" ]; then echo ß; else echo "exiting with $1"; fi; command exit $1; }\n'
+                + 'fcn "$@" && echo ß\n';
                 
             proc.pty(options.bash || "bash", {
                 args: ["-c", script].concat(options.args || []),
