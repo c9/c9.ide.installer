@@ -11,7 +11,7 @@ define(function(require, exports, module) {
         var proc = imports.proc;
         var errorHandler = imports.error_handler;
         
-        var DEBUG = typeof location != undefined && location.search.indexOf("debug=3") != -1;
+        var DEBUG = c9.location.indexOf("debug=3") != -1;
         
         /***** Initialization *****/
         
