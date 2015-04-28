@@ -120,10 +120,6 @@ define(function(require, exports, module) {
                 settings.setJson("state/installer", state);
             }
             
-            // Run headless if the user has previous chosen that
-            // if (settings.getBool("user/installer/@auto") && !plugin.visible)
-            //     return;
-            
             // Ignore sessions if previously decided not to install
             var pref = settings.getJson("state/installer")[session.package.name] || 0;
             if (pref.$version === session.package.version) {
@@ -466,7 +462,6 @@ define(function(require, exports, module) {
                     node.items.push(options);
                 });
                 
-                // var ignoreVersion = sessionState.$version === session.package.version;
                 node.isChecked = checked == 0 
                     ? false 
                     : (checked == session.tasks.length ? true : -1);
@@ -632,7 +627,7 @@ define(function(require, exports, module) {
                         plugin.showFinish = true;
                     
                     // Call finish when the user hides the window
-                    plugin.once("hide", function(){ emit("finished"); })
+                    plugin.once("hide", function(){ emit("finished"); });
                 }
                 else {
                     logln("");
