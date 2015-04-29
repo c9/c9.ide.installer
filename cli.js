@@ -32,13 +32,17 @@ define(function(require, exports, module) {
         // var emit = plugin.getEmitter();
         
         function load() {
-            process.stdin.on("data", function(data){
-                var session = currentSession;
-                if (session && session.executing) {
-                    if (session.process)
-                        session.process.write(data);
-                    return true;
-                }
+            installer.$setPtyExec(function(options, callback) {
+                var childProcess = require("child_process");
+                var process = childProcess.spawn("bash", [
+                    "-c", options.code
+                ].concat(options.args || []), {
+                    stdio: [process.stdin, process.stdout, process.stderr]
+                });
+                process.on("close", function(code) {
+                    if (!code) callback();
+                    else callback(new Error("Failed " + options.name + ". Exit code " + code));
+                });
             });
             
             // Hook the creation of new sessions

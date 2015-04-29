@@ -26,7 +26,7 @@ define(function(require, exports, module) {
         var sessions = [];
         var installed = false;
         var waitForSuccess = false;
-        var installCb, arch;
+        var installCb, arch, parentPty;
         
         // Check that all the dependencies are installed
         var VERSION = 1;
@@ -346,6 +346,9 @@ define(function(require, exports, module) {
         }
         
         function ptyExec(options, onData, callback) {
+            if (parentPty) {
+                return parentPty(options, callback);
+            }
             // Working around PTY.js not having an exit code
             // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
             // wrap script in a function and use subshell to prevent exit 0 skipping echo ß
@@ -493,6 +496,10 @@ define(function(require, exports, module) {
              * 
              */
             ptyExec: ptyExec,
+            /**
+             * @ignore
+             */
+            $setPtyExec: function(v) { if (options.cli) parentPty = v }
         });
         
         register(null, {
