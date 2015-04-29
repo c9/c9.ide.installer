@@ -86,7 +86,7 @@ define(function(require, exports, module) {
             data.split("\n").forEach(function(line){
                 if (!line) return;
                 var p = line.split("@");
-                installed[p[0]] = parseInt(p[1], 10);
+                installed[p[0]] = parseInt(p[1], 10) || 0;
             });
         }
         
@@ -220,8 +220,9 @@ define(function(require, exports, module) {
                 packageVersion = populateSession.version;
             }
             
+            packageVersion  = parseInt(packageVersion, 10) || 0;
             packages[packageName] = { 
-                version: packageVersion, 
+                version: packageVersion,
                 populate: populateSession 
             };
             
