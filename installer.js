@@ -220,7 +220,7 @@ define(function(require, exports, module) {
                 packageVersion = populateSession.version;
             }
             
-            packageVersion  = parseInt(packageVersion, 10) || 0;
+            packageVersion  = populateSession.version || parseInt(packageVersion, 10) || 0;
             packages[packageName] = { 
                 version: packageVersion,
                 populate: populateSession 
@@ -346,6 +346,7 @@ define(function(require, exports, module) {
         }
         
         function ptyExec(options, onData, callback) {
+            console.log(options)
             // Working around PTY.js not having an exit code
             // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
             // wrap script in a function and use subshell to prevent exit 0 skipping echo ß
