@@ -24,7 +24,7 @@ define(function(require, exports, module) {
         var BOLD = "\x1b[01;1m";
         var UNBOLD = "\x1b[01;21m";
         
-        var currentSession, verbose = true;
+        var verbose = true;
         
         /***** Initialization *****/
         
@@ -58,8 +58,6 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function start(session, callback) {
-            currentSession = session;
-            
             // Start Installation
             if (verbose) {
                 logln("Installation Started", LIGHTBlUE);
@@ -128,7 +126,6 @@ define(function(require, exports, module) {
             load();
         });
         plugin.on("unload", function() {
-            currentSession = null;
             verbose = true;
         });
         
