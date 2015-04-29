@@ -682,20 +682,21 @@ define(function(require, exports, module) {
             });
             cbAlways = plugin.getElement("cbAlways");
             
-            var lastState = {};
             cbAlways.on("afterchange", function(e){
                 if (e.value) {
-                    ["showCancel", "showFinish", "showNext", "showPrevious"]
-                        .forEach(function(n){ lastState[n] = plugin[n]; });
-                    
                     plugin.showCancel = false;
                     plugin.showFinish = true;
                     plugin.showNext = false;
                     plugin.showPrevious = false;
                 }
                 else {
-                    ["showCancel", "showFinish", "showNext", "showPrevious"]
-                        .forEach(function(n){ plugin[n] = lastState[n]; });
+                    plugin.showFinish = false;
+                    if (plugin.activePage.name == "intro")
+                        plugin.showNext = true;
+                    else if (plugin.activePage.name == "overview")
+                        plugin.activePage.show();
+                    else if (plugin.activePage.name == "complete")
+                        plugin.showFinish = true;
                 }
                 
                 settings.set("user/installer/@auto", e.value);
