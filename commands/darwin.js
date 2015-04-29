@@ -19,7 +19,7 @@ define(function(require, exports, module) {
             installer.ptyExec({
                 name: "Darwin",
                 bash: bashBin,
-                code: require("text!./brew.sh"),
+                code: require("text!./darwin.sh"),
                 args: [task],
                 cwd: options.cwd,
             }, onData, callback);
