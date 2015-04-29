@@ -26,7 +26,7 @@ define(function(require, exports, module) {
         var sessions = [];
         var installed = false;
         var waitForSuccess = false;
-        var installCb, arch;
+        var installCb, arch, parentPty;
         
         // Check that all the dependencies are installed
         var VERSION = 1;
@@ -35,6 +35,9 @@ define(function(require, exports, module) {
             createSession("Cloud9 IDE", VERSION, require("./install/install"));
         
         function load() {
+            if (options.cli)
+                return simpleInstallRead();
+            
             imports.vfs.on("beforeConnect", function(e) {
                 if (installChecked)
                     return e.done(false);
@@ -83,7 +86,7 @@ define(function(require, exports, module) {
             data.split("\n").forEach(function(line){
                 if (!line) return;
                 var p = line.split("@");
-                installed[p[0]] = parseInt(p[1], 10);
+                installed[p[0]] = parseInt(p[1], 10) || 0;
             });
         }
         
@@ -200,18 +203,14 @@ define(function(require, exports, module) {
         }
         
         function createSession(packageName, packageVersion, populateSession, callback, force) {
-            if (options.cli) {
-                force = true;
+            if (!installed) {
+                return plugin.on("ready", 
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
             }
-            else {
-                if (!installed) {
-                    return plugin.on("ready", 
-                        createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
-                }
-                if (!c9.isReady) {
-                    return c9.on("ready", 
-                        createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
-                }
+            
+            if (!options.cli && !c9.isReady) {
+                return c9.on("ready", 
+                    createSession.bind(this, packageName, packageVersion, populateSession, callback, force));
             }
             
             if (typeof packageVersion == "function") {
@@ -221,8 +220,9 @@ define(function(require, exports, module) {
                 packageVersion = populateSession.version;
             }
             
+            packageVersion  = populateSession.version || parseInt(packageVersion, 10) || 0;
             packages[packageName] = { 
-                version: packageVersion, 
+                version: packageVersion,
                 populate: populateSession 
             };
             
@@ -262,7 +262,6 @@ define(function(require, exports, module) {
             session.on("stop", function(err){
                 sessions.splice(sessions.indexOf(session), 1);
                 emit("stop", { session: session, error: err });
-                callback && callback(err);
                 
                 // Update installed file
                 if (!err && force !== 2) {
@@ -270,7 +269,12 @@ define(function(require, exports, module) {
                     var contents = Object.keys(installed).map(function(item){
                         return item + "@" + installed[item];
                     }).join("\n");
-                    fs.writeFile("~/.c9/installed", contents, function(){});
+                    fs.writeFile("~/.c9/installed", contents, function(){
+                        callback && callback(err);
+                    });
+                }
+                else {
+                    callback && callback(err);
                 }
             });
             session.on("each", function(e){
@@ -342,6 +346,9 @@ define(function(require, exports, module) {
         }
         
         function ptyExec(options, onData, callback) {
+            if (parentPty) {
+                return parentPty(options, callback);
+            }
             // Working around PTY.js not having an exit code
             // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
             // wrap script in a function and use subshell to prevent exit 0 skipping echo ß
@@ -489,6 +496,10 @@ define(function(require, exports, module) {
              * 
              */
             ptyExec: ptyExec,
+            /**
+             * @ignore
+             */
+            $setPtyExec: function(v) { if (options.cli) parentPty = v }
         });
         
         register(null, {

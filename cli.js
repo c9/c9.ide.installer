@@ -24,7 +24,7 @@ define(function(require, exports, module) {
         var BOLD = "\x1b[01;1m";
         var UNBOLD = "\x1b[01;21m";
         
-        var currentSession, verbose = true;
+        var verbose = true;
         
         /***** Initialization *****/
         
@@ -32,13 +32,21 @@ define(function(require, exports, module) {
         // var emit = plugin.getEmitter();
         
         function load() {
-            process.stdin.on("data", function(data){
-                var session = currentSession;
-                if (session && session.executing) {
-                    if (session.process)
-                        session.process.write(data);
-                    return true;
-                }
+            installer.$setPtyExec(function(options, callback) {
+                var childProcess = require("child_process");
+                var p = childProcess.spawn("bash", [
+                    "-c", options.code
+                ].concat(options.args || []), {
+                    stdio: [
+                        process.stdin, 
+                        verbose ? process.stdout : "ignore", 
+                        verbose ? process.stderr : "ignore"
+                    ]
+                });
+                p.on("close", function(code) {
+                    if (!code) callback();
+                    else callback(new Error("Failed " + options.name + ". Exit code " + code));
+                });
             });
             
             // Hook the creation of new sessions
@@ -50,8 +58,6 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function start(session, callback) {
-            currentSession = session;
-            
             // Start Installation
             if (verbose) {
                 logln("Installation Started", LIGHTBlUE);
@@ -75,8 +81,10 @@ define(function(require, exports, module) {
                 
                 if (lastOptions != e.options) {
                     lastOptions = e.options;
-                    if (e.options.name)
+                    if (e.options.name) {
                         logln("Installing " + e.options.name, BLUE);
+                        logln("");
+                    }
                 }
             });
             session.on("data", function(e){
@@ -118,7 +126,6 @@ define(function(require, exports, module) {
             load();
         });
         plugin.on("unload", function() {
-            currentSession = null;
             verbose = true;
         });
         
