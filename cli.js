@@ -34,12 +34,16 @@ define(function(require, exports, module) {
         function load() {
             installer.$setPtyExec(function(options, callback) {
                 var childProcess = require("child_process");
-                var process = childProcess.spawn("bash", [
+                var p = childProcess.spawn("bash", [
                     "-c", options.code
                 ].concat(options.args || []), {
-                    stdio: [process.stdin, process.stdout, process.stderr]
+                    stdio: [
+                        process.stdin, 
+                        verbose ? process.stdout : "ignore", 
+                        verbose ? process.stderr : "ignore"
+                    ]
                 });
-                process.on("close", function(code) {
+                p.on("close", function(code) {
                     if (!code) callback();
                     else callback(new Error("Failed " + options.name + ". Exit code " + code));
                 });
@@ -79,8 +83,10 @@ define(function(require, exports, module) {
                 
                 if (lastOptions != e.options) {
                     lastOptions = e.options;
-                    if (e.options.name)
+                    if (e.options.name) {
                         logln("Installing " + e.options.name, BLUE);
+                        logln("");
+                    }
                 }
             });
             session.on("data", function(e){

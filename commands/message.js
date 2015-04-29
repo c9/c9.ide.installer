@@ -10,7 +10,7 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         function execute(task, options, onData, callback) {
-            onData(task);
+            onData("\n" + task);
             callback();
         }
         
