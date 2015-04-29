@@ -19,7 +19,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var NAMESPACE = "installer";
-        var installSelfCheck = options.installSelfCheck && c9.platform != "win32";
+        var installSelfCheck = options.installSelfCheck;
         var installChecked = false;
         
         var packages = {};
@@ -35,7 +35,7 @@ define(function(require, exports, module) {
             createSession("Cloud9 IDE", VERSION, require("./install/install"));
         
         function load() {
-            if (options.cli)
+            if (options.cli || c9.platform == "win32")
                 return simpleInstallRead();
             
             imports.vfs.on("beforeConnect", function(e) {
@@ -79,7 +79,7 @@ define(function(require, exports, module) {
         }
         
         function parse(data){
-            if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
+            if (data.match(/^1[\r\n]*$/) || c9.platform == "win32") // Backwards compatibility
                 data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
             
             installed = {};

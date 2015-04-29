@@ -33,6 +33,9 @@ define(function(require, exports, module) {
         
         function load() {
             installer.$setPtyExec(function(options, callback) {
+                var cwd = options.cwd;
+                if (cwd && cwd.charAt(0) == "~")
+                    cwd = process.env.HOME + "/" + cwd.substr(1);
                 var childProcess = require("child_process");
                 var p = childProcess.spawn("bash", [
                     "-c", options.code
@@ -41,7 +44,8 @@ define(function(require, exports, module) {
                         process.stdin, 
                         verbose ? process.stdout : "ignore", 
                         verbose ? process.stderr : "ignore"
-                    ]
+                    ],
+                    cwd: cwd
                 });
                 p.on("close", function(code) {
                     if (!code) callback();
