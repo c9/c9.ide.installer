@@ -55,6 +55,15 @@ module.exports = function(session, options){
         // ],
         "bash": require("text!./tmux.sh")
     });
+    
+    // Pty.js
+    session.install({
+        "name": "c9",
+        "description": "The Cloud9 command line interface",
+        "optional": true
+    }, {
+        "npm-g": ["c9"]
+    });
 
     // Show the installation screen
     session.start();

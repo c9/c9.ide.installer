@@ -15,7 +15,7 @@ define(function(require, exports, module) {
         /**
          * Installs an NPM package
          */
-        function execute(task, options, onData, callback) {
+        function execute(task, options, onData, callback, global) {
             var NPM = options.cwd == "~/.c9"
                 ? '"$C9_DIR/node/bin/npm"'
                 : "npm";
@@ -26,7 +26,7 @@ define(function(require, exports, module) {
                 + 'C9_DIR="$HOME/.c9"\n'
                 + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
                 + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
-                + NPM + ' install ' + task;
+                + NPM + (global ? " -g " : "") + ' install ' + task;
                 + "\n";
             
             installer.ptyExec({
@@ -43,9 +43,16 @@ define(function(require, exports, module) {
         
         plugin.on("load", function() {
             installer.addPackageManager("npm", plugin);
+            installer.addPackageManager("npm-g", {
+                execute: function(task, options, onData, callback){
+                    execute(task, options, onData, callback, true);
+                },
+                isAvailable: isAvailable
+            });
         });
         plugin.on("unload", function() {
             installer.removePackageManager("npm");
+            installer.removePackageManager("npm-g");
         });
         
         plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
