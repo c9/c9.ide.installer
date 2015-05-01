@@ -16,19 +16,21 @@ define(function(require, exports, module) {
          * Installs an NPM package
          */
         function execute(task, options, onData, callback, global) {
-            var NPM = options.cwd == "~/.c9"
+            var NPM = !global && options.cwd == "~/.c9"
                 ? '"$C9_DIR/node/bin/npm"'
                 : "npm";
             
             // node-gyp uses sytem node or fails with command not found if
             // we don't bump this node up in the path
             var script = 'set -e\n'
-                + 'C9_DIR="$HOME/.c9"\n'
-                + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
-                + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
-                + NPM + (global ? " -g " : "") + ' install ' + task;
+                + (global
+                    ? NPM + " install -g " + task
+                    : 'C9_DIR="$HOME/.c9"\n'
+                        + 'PATH="$C9_DIR/node/bin/:$C9_DIR/node_modules/.bin:$PATH"\n'
+                        + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
+                        + NPM + ' install ' + task)
                 + "\n";
-            
+                
             installer.ptyExec({
                 name: "NPM",
                 bash: bashBin,
