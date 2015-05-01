@@ -29,7 +29,7 @@ define(function(require, exports, module) {
         var installCb, arch, parentPty;
         
         // Check that all the dependencies are installed
-        var VERSION = 1;
+        var VERSION = 2;
         
         if (!options.cli)
             createSession("Cloud9 IDE", VERSION, require("./install/install"));
@@ -409,6 +409,7 @@ define(function(require, exports, module) {
             installed = false;
             installCb = arch = undefined;
             waitForSuccess = false;
+            parentPty = null;
         });
         
         /***** Register and define API *****/
