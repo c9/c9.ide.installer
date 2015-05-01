@@ -79,7 +79,7 @@ define(function(require, exports, module) {
         }
         
         function parse(data){
-            if (data.match(/^1[\r\n]*$/) || c9.platform == "win32") // Backwards compatibility
+            if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
                 data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
             
             installed = {};
@@ -226,7 +226,7 @@ define(function(require, exports, module) {
                 populate: populateSession 
             };
             
-            if (!force && installed[packageName] == packageVersion)
+            if (!force && installed[packageName] == packageVersion || c9.platform == "win32")
                 return callback && callback();
             
             var session = automate.createSession(NAMESPACE);
