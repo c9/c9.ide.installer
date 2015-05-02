@@ -29,10 +29,12 @@ define(function(require, exports, module) {
         var installCb, arch, parentPty;
         
         // Check that all the dependencies are installed
-        var VERSION = 2;
+        var VERSION = 1;
         
-        if (!options.cli)
+        if (!options.cli) {
             createSession("Cloud9 IDE", VERSION, require("./install/install"));
+            createSession("Cloud9 CLI", VERSION, require("./install/install.cli"));
+        }
         
         function load() {
             if (options.cli || c9.platform == "win32")
