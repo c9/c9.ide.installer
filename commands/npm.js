@@ -1,12 +1,12 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin", "installer", "proc"];
+    main.consumes = ["Plugin", "installer", "c9"];
     main.provides = ["installer.npm"];
     return main;
     
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
         var installer = imports.installer;
-        var proc = imports.proc;
+        var c9 = imports.c9;
         
         var bashBin = options.bashBin || "bash";
         
@@ -19,7 +19,6 @@ define(function(require, exports, module) {
             var NPM = !global && options.cwd == "~/.c9"
                 ? '"$C9_DIR/node/bin/npm"'
                 : "npm";
-            
             // node-gyp uses sytem node or fails with command not found if
             // we don't bump this node up in the path
             var script = 'set -e\n'
@@ -30,6 +29,13 @@ define(function(require, exports, module) {
                         + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
                         + NPM + ' install ' + task)
                 + "\n";
+            
+            if (c9.platform == "win32" && !global) {
+                script = 'set -e\n'
+                    + (options.cwd == "~/.c9" ? 'mkdir -p node_modules' : "") + "\n"
+                    + NPM + ' install ' + task
+                    + "\n";
+            }
                 
             installer.ptyExec({
                 name: "NPM",

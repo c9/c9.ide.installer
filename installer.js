@@ -19,7 +19,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var NAMESPACE = "installer";
-        var installSelfCheck = options.installSelfCheck;
+        var installSelfCheck = options.installSelfCheck && c9.platform !== "win32";
         var installChecked = false;
         
         var packages = {};
@@ -37,7 +37,7 @@ define(function(require, exports, module) {
         }
         
         function load() {
-            if (options.cli || c9.platform == "win32")
+            if (options.cli)
                 return simpleInstallRead();
             
             imports.vfs.on("beforeConnect", function(e) {
@@ -228,7 +228,7 @@ define(function(require, exports, module) {
                 populate: populateSession 
             };
             
-            if (!force && installed[packageName] == packageVersion || c9.platform == "win32")
+            if (!force && installed[packageName] == packageVersion)
                 return callback && callback();
             
             var session = automate.createSession(NAMESPACE);
@@ -350,6 +350,25 @@ define(function(require, exports, module) {
         function ptyExec(options, onData, callback) {
             if (parentPty) {
                 return parentPty(options, callback);
+            }
+            
+            if (c9.platform == "win32") {
+                return proc.spawn("bash.exe", {
+                    args: ["-c", options.code].concat(options.args || []),
+                    cwd: options.cwd || null
+                }, function(err, pty) {
+                    if (err) return callback(err);
+                    pty.stderr.on("data", function(chunk){
+                        onData(chunk, pty);
+                    });
+                    pty.stdout.on("data", function(chunk){
+                        onData(chunk, pty);
+                    });
+                    pty.on("exit", function(code){
+                        if (!code) callback();
+                        else callback(new Error("Failed " + options.name + ". Exit code " + code));                     
+                    });
+                });
             }
             // Working around PTY.js not having an exit code
             // Until https://github.com/chjj/pty.js/pull/110#issuecomment-93573223 is merged
