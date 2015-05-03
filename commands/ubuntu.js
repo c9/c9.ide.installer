@@ -15,29 +15,22 @@ define(function(require, exports, module) {
         /**
          * Installs a .deb package
          */
-        function execute(task, options, onData, callback, runUpdate) {
-            var script = 'set -e\n'
-                + (runUpdate ? "sudo apt-get update\n" : "")
-                + 'sudo apt-get -qq -y install ' + task
-                + "\n";
+        function execute(task, options, onData, callback) {
+            var script = 'sudo apt-get -qq -y install ' + task + '\n'
+                + 'EXIT=$?\n'
+                + 'if [ $EXIT = 100 ]; then\n'
+                + '  sudo apt-get update\n'
+                + '  sudo apt-get -qq -y install ' + task + '\n'
+                + '  exit $?\n'
+                + 'fi\n'
+                + "exit $EXIT\n";
             
-            var cancelled;
             installer.ptyExec({
                 name: "Ubuntu",
                 bash: bashBin,
                 code: script,
                 cwd: options.cwd,
-            }, function(chunk, pty) {
-                onData(chunk, pty);
-                
-                if (chunk.indexOf("404 Not Found") > -1) {
-                    cancelled = true;
-                    pty.kill();
-                    execute(task, options, onData, callback, true);
-                }
-            }, function(err) {
-                if (!cancelled) callback(err);
-            });
+            }, onData, callback);
         }
         
         var available;
