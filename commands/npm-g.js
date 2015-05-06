@@ -1,11 +1,12 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin", "installer"];
+    main.consumes = ["Plugin", "installer", "c9"];
     main.provides = ["installer.npm-g"];
     return main;
     
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
         var installer = imports.installer;
+        var c9 = imports.c9;
         
         var bashBin = options.bashBin || "bash";
         
@@ -37,8 +38,14 @@ define(function(require, exports, module) {
             callback(true);
         }
         
-        plugin.on("load", function() { installer.addPackageManager("npm-g", plugin); });
-        plugin.on("unload", function() { installer.removePackageManager("npm-g"); });
+        plugin.on("load", function() {
+            if (c9.platform !== "win32")
+                installer.addPackageManager("npm-g", plugin);
+        });
+        plugin.on("unload", function() {
+            if (c9.platform !== "win32")
+                installer.removePackageManager("npm-g");
+        });
         
         plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
