@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = ["Plugin", "installer"];
-    main.provides = ["installer.npm"];
+    main.provides = ["installer.npm-g"];
     return main;
     
     function main(options, imports, register) {
@@ -12,33 +12,21 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         function execute(task, options, onData, callback, global) {
-            var PATH;
-            
-            if (options.cwd === "~/.c9") {
-                /*
-                 * HACK: if we are installing localfs, give priority to
-                 *       ~/.c9 nodejs over system nodejs
-                 */
-                PATH = "$C9_DIR/node/bin:$C9_DIR/node_modules/.bin:$PATH";
-            }
-            else {
-                PATH = "$PATH:$C9_DIR/node/bin:$C9_DIR/node_modules/.bin";
-            }
-            
             var script = [
                 "set -e",
                 
                 "export C9_DIR=$HOME/.c9",
-                "export PATH=" + PATH,
+                "export PATH=$PATH:$C9_DIR/node/bin:$C9_DIR/node_modules/.bin",
                 "export NPM=$(which npm)",
                 
-                "mkdir -p ./node_modules",
+                "mkdir -p $C9_DIR/empty",
+                "cd $C9_DIR/empty",
                 
-                "$NPM install --production " + task,
+                "$NPM install -g --production " + task,
             ];
             
             installer.ptyExec({
-                name: "npm",
+                name: "npm-g",
                 bash: bashBin,
                 code: script.join("\n"),
                 cwd: options.cwd,
@@ -49,11 +37,11 @@ define(function(require, exports, module) {
             callback(true);
         }
         
-        plugin.on("load", function() { installer.addPackageManager("npm", plugin); });
-        plugin.on("unload", function() { installer.removePackageManager("npm"); });
+        plugin.on("load", function() { installer.addPackageManager("npm-g", plugin); });
+        plugin.on("unload", function() { installer.removePackageManager("npm-g"); });
         
         plugin.freezePublicAPI({ execute: execute, isAvailable: isAvailable });
         
-        register(null, { "installer.npm": plugin });
+        register(null, { "installer.npm-g": plugin });
     }
 });
