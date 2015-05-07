@@ -70,12 +70,15 @@ define(function(require, exports, module) {
                 if (err) {
                     if (err.code == "ENOENT")
                         installed = {};
-                    else
+                    else {
                         c9.once("connect", simpleInstallRead);
-                    return;
+                        return;
+                    }
+                }
+                else {
+                    parse(data);
                 }
                 
-                parse(data);
                 emit.sticky("ready", installed);
             });
         }
