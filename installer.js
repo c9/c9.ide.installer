@@ -82,7 +82,7 @@ define(function(require, exports, module) {
         
         function parse(data){
             if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
-                data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1";
+                data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1\nCloud9 CLI@1";
             
             installed = {};
             data.split("\n").forEach(function(line){
@@ -90,6 +90,13 @@ define(function(require, exports, module) {
                 var p = line.split("@");
                 installed[p[0]] = parseInt(p[1], 10) || 0;
             });
+            
+            if (!installSelfCheck) {
+                installed["Cloud9 IDE"] = 1;
+                installed["c9.ide.collab"] = 1;
+                installed["c9.ide.find"] = 1;
+                installed["Cloud9 CLI"] = 1;
+            }
         }
         
         function readFromDisk(vfs){
