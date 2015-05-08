@@ -18,6 +18,7 @@ define(function(require, exports, module) {
                 "set -e",
                 
                 "export C9_DIR=$HOME/.c9",
+                "export PATH=$C9_DIR/node/bin:$PATH",
                 "export NPM=$C9_DIR/node/bin/npm",
                 
                 // change into empty folder
