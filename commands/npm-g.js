@@ -18,17 +18,22 @@ define(function(require, exports, module) {
                 "set -e",
                 
                 "export C9_DIR=$HOME/.c9",
-                "export PATH=$PATH:$C9_DIR/node/bin:$C9_DIR/node_modules/.bin",
-                "export NPM=$(which npm)",
-                "export NPM_BIN_DIR=$(npm bin -g)",
+                "export NPM=$C9_DIR/node/bin/npm",
                 
+                // change into empty folder
                 "mkdir -p $C9_DIR/empty",
                 "cd $C9_DIR/empty",
                 
-                "if [[ -w $NPM_BIN_DIR ]]; then",
-                    "$NPM install -g --production " + task,
+                // install
+                "$NPM install -g --production " + task,
+                
+                // try to link bin to system folders, or show warning
+                "if [[ -w /usr/bin ]]; then",
+                    "$NPM explore -g " + task + " -- 'ln -sfv $(pwd)/bin/* /usr/bin/'",
+                "elif [[ -w /usr/local/bin ]]; then",
+                    "$NPM explore -g " + task + " -- 'ln -sfv $(pwd)/bin/* /usr/local/bin/'",
                 "else",
-                    "$C9_DIR/node/bin/npm install -g --production " + task,
+                    "echo WARN: command installed to $($NPM bin -g 2>&1) >&2",
                 "fi"
             ];
             
