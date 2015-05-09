@@ -12,18 +12,30 @@ define(function(require, exports, module) {
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
-        function execute(task, options, onData, callback, global) {
+        function execute(task, options, onData, callback) {
             var script = [
+                c9.debug ? "set -x" : "",
                 "set -e",
                 
                 "export C9_DIR=$HOME/.c9",
-                "export PATH=$PATH:$C9_DIR/node/bin:$C9_DIR/node_modules/.bin",
-                "export NPM=$(which npm)",
+                "export PATH=$C9_DIR/node/bin:$PATH",
+                "export NPM=$C9_DIR/node/bin/npm",
                 
+                // change into empty folder
                 "mkdir -p $C9_DIR/empty",
                 "cd $C9_DIR/empty",
                 
+                // install
                 "$NPM install -g --production " + task,
+                
+                // try to link bin to system folders, or show warning
+                "if [[ -w /usr/bin ]]; then",
+                    "$NPM explore -g " + task + " -- 'ln -sfv $(pwd)/bin/* /usr/bin/'",
+                "elif [[ -w /usr/local/bin ]]; then",
+                    "$NPM explore -g " + task + " -- 'ln -sfv $(pwd)/bin/* /usr/local/bin/'",
+                "else",
+                    "echo WARN: command installed to $($NPM bin -g 2>&1) >&2",
+                "fi"
             ];
             
             installer.ptyExec({
