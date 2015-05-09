@@ -527,7 +527,7 @@ define(function(require, exports, module) {
         }
         
         function log(msg) {
-            terminal.convertEol = !installer.checked;
+            terminal.convertEol = !installer.ptyEnabled;
             terminal.write(msg);
         }
         

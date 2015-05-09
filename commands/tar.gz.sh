@@ -1,9 +1,10 @@
-set -e
+set -ex
 
-SOURCE=$0
-TARGET=$1
-URL=$2
-DIR=$3
+SOURCE="$0"
+TARGET="$1"
+URL="$2"
+DIR="$3"
+
 
 has() {
   type "$1" > /dev/null 2>&1
@@ -43,9 +44,9 @@ if [ "$URL" ]; then
 fi
 
 # Make sure package is in the target folder
-if [ `dirname $SOURCE` != $TARGET ]; then
+if [ "$(dirname "$SOURCE")" != "$(dirname "$TARGET"/x)" ]; then
     cp -a "$SOURCE" "$TARGET"
-    SOURCE="$TARGET/$(basename $SOURCE)"
+    SOURCE="$TARGET/$(basename "$SOURCE")"
 fi
 
 # Unpack source

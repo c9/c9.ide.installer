@@ -19,7 +19,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var NAMESPACE = "installer";
-        var installSelfCheck = options.installSelfCheck && c9.platform !== "win32";
+        var installSelfCheck = options.installSelfCheck;
         var installChecked = false;
         
         var packages = {};
@@ -468,6 +468,11 @@ define(function(require, exports, module) {
              * 
              */
             get checked(){ return installChecked; },
+            
+            /**
+             * 
+             */
+            get ptyEnabled(){ return installChecked && c9.platform != "win32"; },
             
             /**
              * @ignore

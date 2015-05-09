@@ -26,15 +26,28 @@ define(function(require, exports, module) {
             var source = (task.source || "-1").replace(/^~/, c9.home);
             var target = task.target.replace(/^~/, c9.home);
             
+            source = normalizePath(source);
+            target = normalizePath(target);
+            
+            var code = require("text!./tar.gz.sh");
+            if (c9.platform == "win32")
+                code = code.replace(/2> >\(/g, "#")
+            
             installer.ptyExec({
                 name: "Tar.Gz",
                 bash: bashBin,
                 proc: proc,
-                code: require("text!./tar.gz.sh"),
+                code: code,
                 args: [source, target, task.url || "", task.dir || ""],
                 cwd: options.cwd
             }, onData, callback);
 
+        }
+        
+        function normalizePath(p) {
+            if (c9.platform == "win32")
+                p = p.replace(/\\/g, "/").replace(/^(\w):/, "/$1");
+            return p;
         }
         
         function isAvailable(callback){

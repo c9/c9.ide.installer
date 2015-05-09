@@ -12,11 +12,27 @@ module.exports = function(session, options){
     if (options.platform == "win32") {
         session.preInstallScript = null;
         session.install({
-            "name": ".c9",
-            "cwd": "~"
-        }, {
-            "bash": "mkdir -p ~/.c9"
-        });
+            "name": "Node.js", 
+            "description": "binary dependencies: node@0.12, pty.js, sqlite3"
+        }, [
+            {
+                "tar.gz": { 
+                    "url": "https://github.com/cloud9ide/sdk-deps-win32/releases/download/v0.0.1/node.tar.gz",
+                    "target": "~/.c9/"
+                }
+            }
+        ]);
+        session.install({
+            "name": "Msys", 
+            "description": "minimal version of msys"
+        }, [
+            {
+                "tar.gz": { 
+                    "url": "https://github.com/cloud9ide/sdk-deps-win32/releases/download/v0.0.1/msys.tar.gz",
+                    "target": "~/.c9/"
+                }
+            }
+        ]);
     }
     else {
         session.install({

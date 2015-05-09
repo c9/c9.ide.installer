@@ -13,29 +13,14 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         function execute(task, options, onData, callback, global) {
-            var PATH;
-            
-            if (options.cwd === "~/.c9") {
-                /*
-                 * HACK: if we are installing localfs, give priority to
-                 *       ~/.c9 nodejs over system nodejs
-                 */
-                PATH = "$C9_DIR/node/bin:$C9_DIR/node_modules/.bin:$PATH";
-            }
-            else {
-                PATH = "$PATH:$C9_DIR/node/bin:$C9_DIR/node_modules/.bin";
-            }
-            
             var script = [
-                "set -e",
-                
-                "export C9_DIR=$HOME/.c9",
-                "export PATH=" + PATH,
-                "export NPM=$(which npm)",
-                
-                "mkdir -p ./node_modules",
-                
-                "$NPM install --production " + task,
+                'set -e',
+                'export C9_DIR="$HOME"/.c9',
+                // always use nodejs version installed by .c9
+                'export PATH="$C9_DIR/node/bin:$C9_DIR/node_modules/.bin:$PATH"',
+                'mkdir -p ./node_modules',
+                 // TODO make sure we do not install a folder from cwd instead of npm module
+                'npm install --production ' + task,
             ];
             
             installer.ptyExec({
