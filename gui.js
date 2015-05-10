@@ -114,14 +114,14 @@ define(function(require, exports, module) {
             
             // Make sure there is an entry for this plugin so it's remembered
             // if it fails - so it can be reinstalled
-            var state = settings.getJson("state/installer");
+            var state = settings.getJson("state/installer") || {};
             if (!state[session.package.name]) {
                 state[session.package.name] = {};
                 settings.setJson("state/installer", state);
             }
             
             // Ignore sessions if previously decided not to install
-            var pref = settings.getJson("state/installer")[session.package.name] || 0;
+            var pref = state[session.package.name] || 0;
             if (pref.$version === session.package.version) {
                 if (plugin.visible && plugin.activePage.name != "execute" && plugin.activePage.name != "done")
                     updatePackages();
