@@ -69,16 +69,14 @@ define(function(require, exports, module) {
             fs.readFile(path, function(err, data) {
                 if (err) {
                     if (err.code == "ENOENT")
-                        installed = {};
+                        data = "";
                     else {
                         c9.once("connect", simpleInstallRead);
                         return;
                     }
                 }
-                else {
-                    parse(data);
-                }
                 
+                parse(data);
                 emit.sticky("ready", installed);
             });
         }
