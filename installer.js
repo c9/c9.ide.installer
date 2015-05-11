@@ -33,7 +33,7 @@ define(function(require, exports, module) {
         
         if (!options.cli) {
             createSession("Cloud9 IDE", VERSION, require("./install/install"));
-            createSession("Cloud9 CLI", VERSION, require("./install/install.cli"));
+            // createSession("Cloud9 CLI", VERSION, require("./install/install.cli"));
         }
         
         function load() {
