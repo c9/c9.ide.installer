@@ -1,9 +1,9 @@
 set -ex
 
-SOURCE="$0"
-TARGET="$1"
-URL="$2"
-DIR="$3"
+SOURCE="$1"
+TARGET="$2"
+URL="$3"
+DIR="$4"
 
 
 has() {
@@ -29,7 +29,7 @@ cd "$TARGET"
 if [ "$URL" ]; then
 
     if has "wget"; then
-        DOWNLOAD="wget --no-check-certificate -nc -nv"
+        DOWNLOAD="wget --no-check-certificate -nc"
     elif has "curl"; then
         DOWNLOAD="curl -sSOL"
     else
@@ -38,7 +38,9 @@ if [ "$URL" ]; then
     fi
 
     echo "Downloading... $URL"
-    $DOWNLOAD "$URL" 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
+    printf "\e[01;30m"
+    $DOWNLOAD "$URL"
+    printf "\e[0m"
     
     SOURCE="$TARGET/$(basename $URL)"
 fi
@@ -51,7 +53,9 @@ fi
 
 # Unpack source
 echo "Unpacking... $SOURCE"
-tar --overwrite -zxf "$SOURCE" 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
+printf "\e[01;30m"
+tar --overwrite -zxf "$SOURCE"
+printf "\e[0m"
 
 # Delete package
 rm -Rf $SOURCE
@@ -61,13 +65,17 @@ if [ "$DIR" ]; then
     echo "Merging... $TARGET/$DIR in $TARGET"
     
     merge() {
-        mv "$DIR" "/tmp/$DIR"
-        mv "/tmp/$DIR/"* .
+        mkdir -p "c9_tmp"
+        rm -rf "c9_tmp/$DIR"
+        mv "$DIR" "c9_tmp/$DIR"
+        mv "c9_tmp/$DIR/"* .
         set +e
-        mv "/tmp/$DIR/."* . 2>/dev/null
+        mv "c9_tmp/$DIR/."* . 2>/dev/null
         set -e
-        rmdir "/tmp/$DIR"
+        rm -rf "c9_tmp"
     }
-    
-    merge 2> >(while read line; do echo -e "\e[01;30m$line\e[0m" >&2; done)
+
+    printf "\e[01;30m"
+    merge
+    printf "\e[0m"
 fi

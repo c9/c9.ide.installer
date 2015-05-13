@@ -31,14 +31,14 @@ define(function(require, exports, module) {
             
             var code = require("text!./tar.gz.sh");
             if (c9.platform == "win32")
-                code = code.replace(/2> >\(/g, "#")
+                code = code.replace(/2> >\(/g, "#");
             
             installer.ptyExec({
                 name: "Tar.Gz",
                 bash: bashBin,
                 proc: proc,
                 code: code,
-                args: [source, target, task.url || "", task.dir || ""],
+                args: [".", source, target, task.url || "", task.dir || ""],
                 cwd: options.cwd
             }, onData, callback);
 
