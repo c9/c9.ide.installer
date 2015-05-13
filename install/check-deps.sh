@@ -17,11 +17,16 @@ check_deps() {
     OS="DEBIAN"
   fi
   
-  for DEP in "make" "gcc" "g++"; do
-    if ! has $DEP; then 
-      MISSING="$MISSING, $DEP"
-    fi
-  done
+  check_missing() {
+    MISSING=
+    for DEP in "make" "gcc" "g++"; do
+      if ! has $DEP; then 
+        MISSING="$MISSING, $DEP"
+      fi
+    done
+  }
+  
+  check_missing
   
   if [ "$MISSING" ]; then
     
@@ -33,12 +38,12 @@ check_deps() {
     
     if [ "$CMD" ]; then
       echo "running '$CMD' to install missing dependencies: $MISSING"
-      if [ $($CMD) ]; then
-        MISSING=; 
-      else
-        echo "ERROR: failed to install '$MISSING'"
-      fi
-    else
+      $CMD || true;
+    fi
+    
+    check_missing
+    
+    if [ "$MISSING" ]; then
       echo "ERROR: failed to install '$MISSING'"
     fi
   fi
