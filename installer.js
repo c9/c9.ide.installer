@@ -361,6 +361,7 @@ define(function(require, exports, module) {
             }
             
             if (c9.platform == "win32") {
+                options.code = options.code.replace(/\r\n/g, "\n");
                 return proc.spawn("bash.exe", {
                     args: ["-c", options.code].concat(options.args || []),
                     cwd: options.cwd || null
