@@ -5,7 +5,7 @@ module.exports = function(session, options){
     session.preInstallScript = require("text!./check-deps.sh");
     
     // Node.js
-    var NODEVERSION = "v0.12.0";
+    var NODEVERSION =  options.arch == "arm-pi" ? "v0.10.28" : "v0.12.0";
     var nodeName = "node-" + NODEVERSION + "-" 
         + options.platform + "-" + options.arch;
     
