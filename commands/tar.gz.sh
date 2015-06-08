@@ -54,7 +54,7 @@ fi
 # Unpack source
 echo "Unpacking... $SOURCE"
 printf "\e[01;30m"
-tar --overwrite -zxf "$SOURCE"
+tar -U -zxf "$SOURCE"
 printf "\e[0m"
 
 # Delete package
