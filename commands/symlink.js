@@ -6,8 +6,9 @@ define(function(require, exports, module) {
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
         var installer = imports.installer;
-        var proc = imports.proc;
         var c9 = imports.c9;
+        
+        var dirname = require("path").dirname;
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -23,17 +24,19 @@ define(function(require, exports, module) {
             var source = task.source.replace(/^~/, c9.home);
             var target = task.target.replace(/^~/, c9.home);
             
-            proc.execFile("ln", {
-                args: ["-f", "-s", source, target],
-                cwd: options.cwd || null
-            }, function(err, stdout, stderr){
-                // Pipe the data to the onData function
-                if (stdout) onData(stdout);
-                if (stderr) onData(stderr);
-                
-                if (err) return callback(err);
-                else callback();
-            });
+            var script = [
+                'set -ex',
+                'export C9_DIR="$HOME"/.c9',
+                'mkdir -p "$1"',
+                'ln -sf "$2" "$3"'
+            ];
+            
+            installer.ptyExec({
+                name: "ln",
+                code: script.join("\n"),
+                cwd: options.cwd,
+                args: [".", dirname(target), source, target],
+            }, onData, callback);
         }
         
         function isAvailable(callback){
