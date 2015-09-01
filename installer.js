@@ -26,7 +26,7 @@ define(function(require, exports, module) {
         var sessions = [];
         var installed = false;
         var waitForSuccess = false;
-        var installCb, arch, parentPty;
+        var installCb, arch, platform, parentPty;
         
         // Check that all the dependencies are installed
         var VERSION = 1;
@@ -336,18 +336,29 @@ define(function(require, exports, module) {
             
             if (arch === undefined) {
                 arch = null;
-                proc.execFile("uname", { args: ["-m"] }, function(e, p) {
-                    if (/x86_64/.test(p)) p = "x64";
-                    else if (/i.*86/) p = "x86";
-                    else if (/armv6l|armv7l/) p = "arm-pi";
-                    arch = p || undefined;
+                proc.execFile("uname", { args: ["-ms"] }, function(e, p) {
+                    var parts = p.trim().split(/\s+/);
+                    platform = parts[0].toLowerCase();
+                    if (/MINGW|MSYS|CYGWIN/i.test(platform))
+                        platform = c9.platform; // windows only supports local version
+                        
+                    arch = parts[1];
+                    if (/x86_64/i.test(arch))
+                        arch = "x64";
+                    else if (/i.*86/i.test(arch))
+                        arch = "x86";
+                    else if (/armv6l|armv7l/i.test(arch)) 
+                        arch = "arm-pi";
+                    if (!arch)
+                        arch = undefined;
+                    
                     emit.sticky("arch", arch);
                 });
             }
             
             plugin.once("arch", function() {
                 populateSession(session, {
-                    platform: c9.platform,
+                    platform: platform,
                     arch: arch
                 });
             });
@@ -437,7 +448,7 @@ define(function(require, exports, module) {
         plugin.on("unload", function() {
             installChecked = false;
             installed = false;
-            installCb = arch = undefined;
+            installCb = arch = platform = undefined;
             waitForSuccess = false;
             parentPty = null;
         });
