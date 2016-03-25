@@ -17,7 +17,7 @@ define(function(require, exports, module) {
                 'set -e',
                 'export C9_DIR="$HOME"/.c9',
                 // always use nodejs version installed by .c9
-                'export PATH="$C9_DIR/node/bin:$C9_DIR/node_modules/.bin:$PATH"',
+                'export PATH="$C9_DIR/node/bin:$C9_DIR/node_modules/.bin:/mnt/shared/sbin:$PATH"',
                 'mkdir -p ./node_modules',
                  // TODO make sure we do not install a folder from cwd instead of npm module
                 'npm install --production ' + task,

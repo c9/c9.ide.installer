@@ -67,6 +67,7 @@ configure_python() {
     fi
   fi
   "$NPM" config -g set python "$PYTHON"
+  "$NPM" config -g set unsafe-perm true
 }
 
 # use local npm cache
