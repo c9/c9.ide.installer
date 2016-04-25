@@ -37,9 +37,6 @@ define(function(require, exports, module) {
         }
         
         function load() {
-            if (c9.readonly)
-                return;
-            
             if (options.cli)
                 return simpleInstallRead();
             
