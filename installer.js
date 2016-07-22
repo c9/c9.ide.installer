@@ -348,10 +348,12 @@ define(function(require, exports, module) {
                     arch = parts[1];
                     if (/x86_64/i.test(arch))
                         arch = "x64";
+                    else if (/armv6l/i.test(arch)) 
+                        arch = "armv6l";
+                    else if (/armv7l/i.test(arch)) 
+                        arch = "armv7l";
                     else if (/i.*86/i.test(arch))
                         arch = "x86";
-                    else if (/armv6l|armv7l/i.test(arch)) 
-                        arch = "arm-pi";
                     if (!arch)
                         arch = undefined;
                     

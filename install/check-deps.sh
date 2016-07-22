@@ -33,6 +33,7 @@ check_deps() {
     if [ "$OS" == "CentOS" ]; then
       CMD="sudo yum groupinstall -y development"
     elif [ "$OS" == "DEBIAN" ]; then
+      sudo apt-get update || true
       CMD="sudo apt-get install -y build-essential"
     fi
     

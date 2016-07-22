@@ -5,7 +5,7 @@ module.exports = function(session, options){
     session.preInstallScript = require("text!./check-deps.sh");
     
     // Node.js
-    var NODEVERSION =  options.arch == "arm-pi" ? "v0.10.28" : "v0.12.0";
+    var NODEVERSION =  "v4.4.6";
     var nodeName = "node-" + NODEVERSION + "-" 
         + options.platform + "-" + options.arch;
     
@@ -57,7 +57,7 @@ module.exports = function(session, options){
             "description": "Pseudo Terminal support. Used by the Cloud9 Terminal",
             "cwd": "~/.c9"
         }, {
-            "npm": ["node-gyp", "pty.js@0.2.7-1"]
+            "npm": ["node-gyp", "pty.js@0.3.0"]
         });
         
         // Tmux
