@@ -12,7 +12,11 @@ check_deps() {
   local CMD
 
   if [[ `cat /etc/issue 2>/dev/null` =~ CentOS ]]; then
-    OS="CentOS"
+    OS="RHEL"
+  elif [[ `cat /etc/redhat-release 2>/dev/null` =~ "Red Hat" ]]; then
+    OS="RHEL"
+  elif [[ `cat /etc/system-release 2>/dev/null` =~ "Amazon Linux" ]]; then
+    OS="RHEL"
   elif [[ `cat /proc/version 2>/dev/null` =~ Ubuntu|Debian ]]; then
     OS="DEBIAN"
   fi
@@ -30,7 +34,7 @@ check_deps() {
   
   if [ "$MISSING" ]; then
     
-    if [ "$OS" == "CentOS" ]; then
+    if [ "$OS" == "RHEL" ]; then
       CMD="sudo yum groupinstall -y development"
     elif [ "$OS" == "DEBIAN" ]; then
       sudo apt-get update || true
@@ -45,15 +49,15 @@ check_deps() {
     check_missing
     
     if [ "$MISSING" ]; then
-      echo "ERROR: failed to install '$MISSING'"
+      echo "ERROR: failed to install '${MISSING/, /}'"
     fi
   fi
   
-  # CentOS
-  if [ "$OS" == "CentOS" ]; then
+  # RHEL, CentOS, Amazon Linux
+  if [ "$OS" == "RHEL" ]; then
     if ! yum list installed glibc-static >/dev/null 2>&1; then
       echo "Error: please install glibc-static to proceed"
-      echo "To do so, log into your machine and type 'yum install glibc-static'"
+      echo "To do so, log into your machine and type 'sudo yum install glibc-static'"
       MISSING=1
     fi
   fi
