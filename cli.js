@@ -54,7 +54,7 @@ define(function(require, exports, module) {
             });
             
             // Hook the creation of new sessions
-            installer.on("beforeStart", function(e){
+            installer.on("beforeStart", function(e) {
                 start(e.session);
             }, plugin);
         }
@@ -71,7 +71,7 @@ define(function(require, exports, module) {
                 log("Installing Dependencies...", LIGHTBlUE);
             }
             
-            session.on("run", function(){
+            session.on("run", function() {
                 if (!verbose) return;
                 
                 var heading = "Package " + session.package.name 
@@ -80,7 +80,7 @@ define(function(require, exports, module) {
             });
             
             var lastOptions;
-            session.on("each", function(e){
+            session.on("each", function(e) {
                 if (!verbose) return;
                 
                 if (lastOptions != e.options) {
@@ -91,13 +91,13 @@ define(function(require, exports, module) {
                     }
                 }
             });
-            session.on("data", function(e){
+            session.on("data", function(e) {
                 if (!verbose) return;
                 
                 log(e.data);
             });
             
-            session.start(function(err){
+            session.start(function(err) {
                 if (err) {
                     logln("\n" + err.message + "\n\n" + RED
                       + "One or more errors occured. "
@@ -117,7 +117,7 @@ define(function(require, exports, module) {
         }
         
         function log(msg, color, unset) {
-            logln(msg, color, unset, true)
+            logln(msg, color, unset, true);
         }
         
         function logln(msg, color, unset, noLineEnd) {
@@ -136,8 +136,8 @@ define(function(require, exports, module) {
         /***** Register and define API *****/
         
         plugin.freezePublicAPI({
-            get verbose(){ return verbose },
-            set verbose(v){ verbose = v; }
+            get verbose() { return verbose; },
+            set verbose(v) { verbose = v; }
         });
         
         register(null, {

@@ -39,7 +39,7 @@ define(function(require, exports, module) {
             }, onData, callback);
         }
         
-        function isAvailable(callback){
+        function isAvailable(callback) {
             callback(true);
         }
         

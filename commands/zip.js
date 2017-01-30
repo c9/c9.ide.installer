@@ -37,7 +37,7 @@ define(function(require, exports, module) {
 
         }
         
-        function isAvailable(callback){
+        function isAvailable(callback) {
             callback(true);
         }
         

@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     
-module.exports = function(session, options){
+module.exports = function(session, options) {
     session.install({
         "name": "c9",
         "description": "The Cloud9 command line interface",

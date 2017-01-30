@@ -67,7 +67,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function simpleInstallRead(){
+        function simpleInstallRead() {
             var path = options.installPath.replace(c9.home, "~") + "/installed";
             fs.readFile(path, function(err, data) {
                 if (err) {
@@ -84,12 +84,12 @@ define(function(require, exports, module) {
             });
         }
         
-        function parse(data){
+        function parse(data) {
             if (data.match(/^1[\r\n]*$/)) // Backwards compatibility
                 data = "Cloud9 IDE@1\nc9.ide.collab@1\nc9.ide.find@1\nCloud9 CLI@1";
             
             installed = {};
-            data.split("\n").forEach(function(line){
+            data.split("\n").forEach(function(line) {
                 if (!line) return;
                 var p = line.split("@");
                 installed[p[0]] = parseInt(p[1], 10) || 0;
@@ -103,8 +103,8 @@ define(function(require, exports, module) {
             }
         }
         
-        function readFromDisk(vfs){
-            function done(err){
+        function readFromDisk(vfs) {
+            function done(err) {
                 if (!installed) installed = {};
                 
                 if (err && err.code == "ENOENT" || installed["Cloud9 IDE"] !== VERSION) {
@@ -112,7 +112,7 @@ define(function(require, exports, module) {
                     // to a special mode of proc
                     proc.installMode = vfs;
                     
-                    plugin.once("success", function(){
+                    plugin.once("success", function() {
                         proc.installMode = false;
                         installChecked = true;
                         installCb(true);
@@ -120,7 +120,7 @@ define(function(require, exports, module) {
                     });
                     
                     // Wait until installer is done
-                    plugin.on("stop", function listen(e){
+                    plugin.on("stop", function listen(e) {
                         if (e.session.package.name == "Cloud9 IDE" && (!e.error || !waitForSuccess)) {
                             plugin.waitForSuccess = false;
                             plugin.off("stop", listen);
@@ -146,15 +146,15 @@ define(function(require, exports, module) {
                 
                 var data = "";
                 var stream = meta.stream;
-                stream.on("data", function(chunk){ data += chunk; });
-                stream.on("end", function(){ 
+                stream.on("data", function(chunk) { data += chunk; });
+                stream.on("end", function() { 
                     parse(data);
                     done();
                 });
             });
         }
         
-        function addPackageManager(name, implementation){
+        function addPackageManager(name, implementation) {
             automate.addCommand(NAMESPACE, name, implementation);
         }
         
@@ -163,7 +163,7 @@ define(function(require, exports, module) {
         }
 
         // Add aliases to support a broader range of platforms
-        function addPackageManagerAlias(){
+        function addPackageManagerAlias() {
             var args = [NAMESPACE];
             for (var i = 0; i < arguments.length; i++) {
                 args.push(arguments[i]);
@@ -172,7 +172,7 @@ define(function(require, exports, module) {
             automate.addCommandAlias.apply(this, args);
         }
         
-        function isInstalled(pkgName, pkgVersion, callback){
+        function isInstalled(pkgName, pkgVersion, callback) {
             if (!installSelfCheck)
                 return true;
             
@@ -180,7 +180,7 @@ define(function(require, exports, module) {
                 callback = pkgVersion, pkgVersion = undefined;
             
             if (!installed && callback) {
-                return plugin.once("ready", function(){
+                return plugin.once("ready", function() {
                     if (isInstalled(pkgName, pkgVersion, callback))
                         callback();
                 });
@@ -190,7 +190,7 @@ define(function(require, exports, module) {
                 && (pkgVersion ? installed[pkgName] == pkgVersion : true);
             
             if (!boolInstalled && callback) {
-                plugin.on("stop", function listen(){
+                plugin.on("stop", function listen() {
                     if (isInstalled(pkgName, pkgVersion)) {
                         callback();
                         plugin.off("stop", listen);
@@ -201,7 +201,7 @@ define(function(require, exports, module) {
             return boolInstalled;
         }
         
-        function reinstall(packageName, silent){
+        function reinstall(packageName, silent) {
             if (packages[packageName]) {
                 if (!silent)
                     emit("reinstall", { name: packageName });
@@ -233,7 +233,7 @@ define(function(require, exports, module) {
                 packageVersion = populateSession.version;
             }
             
-            packageVersion  = populateSession.version || parseInt(packageVersion, 10) || 0;
+            packageVersion = populateSession.version || parseInt(packageVersion, 10) || 0;
             packages[packageName] = { 
                 version: packageVersion,
                 populate: populateSession 
@@ -269,20 +269,20 @@ define(function(require, exports, module) {
                 }
             }
             
-            session.on("run", function(){
+            session.on("run", function() {
                 emit("start", { session: session }); 
             });
-            session.on("stop", function(err){
+            session.on("stop", function(err) {
                 sessions.splice(sessions.indexOf(session), 1);
                 emit("stop", { session: session, error: err });
                 
                 // Update installed file
                 if (!err && force !== 2) {
                     installed[packageName] = packageVersion;
-                    var contents = Object.keys(installed).map(function(item){
+                    var contents = Object.keys(installed).map(function(item) {
                         return item + "@" + installed[item];
                     }).join("\n");
-                    fs.writeFile("~/.c9/installed", contents, function(){
+                    fs.writeFile("~/.c9/installed", contents, function() {
                         callback && callback(err);
                     });
                 }
@@ -290,7 +290,7 @@ define(function(require, exports, module) {
                     callback && callback(err);
                 }
             });
-            session.on("each", function(e){
+            session.on("each", function(e) {
                 emit("each", e); 
             });
             
@@ -307,18 +307,18 @@ define(function(require, exports, module) {
                 /**
                  * 
                  */
-                get introduction(){ return intro; },
-                set introduction(value){ intro = value; },
+                get introduction() { return intro; },
+                set introduction(value) { intro = value; },
                 /**
                  * 
                  */
-                get preInstallScript(){ return pre; },
-                set preInstallScript(value){ pre = value; },
+                get preInstallScript() { return pre; },
+                set preInstallScript(value) { pre = value; },
                 /**
                  * 
                  */
-                get postInstallScript(){ return post; },
-                set postInstallScript(value){ post = value; },
+                get postInstallScript() { return post; },
+                set postInstallScript(value) { post = value; },
                 
                 /**
                  * 
@@ -331,7 +331,7 @@ define(function(require, exports, module) {
                 start: start
             });
             
-            session.on("unload", function(){
+            session.on("unload", function() {
                 sessions.splice(sessions.indexOf(session), 1);
             }, plugin);
             
@@ -339,7 +339,7 @@ define(function(require, exports, module) {
             
             if (arch === undefined) {
                 arch = null;
-                proc.execFile("uname", { args: ["-ms"] }, function(e, p) {
+                proc.execFile("uname", { args: ["-ms"]}, function(e, p) {
                     var parts = p.trim().split(/\s+/);
                     platform = parts[0].toLowerCase();
                     if (/MINGW|MSYS|CYGWIN/i.test(platform))
@@ -383,13 +383,13 @@ define(function(require, exports, module) {
                     cwd: options.cwd || null
                 }, function(err, pty) {
                     if (err) return callback(err);
-                    pty.stderr.on("data", function(chunk){
+                    pty.stderr.on("data", function(chunk) {
                         onData(chunk, pty);
                     });
-                    pty.stdout.on("data", function(chunk){
+                    pty.stdout.on("data", function(chunk) {
                         onData(chunk, pty);
                     });
-                    pty.on("exit", function(code){
+                    pty.on("exit", function(code) {
                         if (!code) callback();
                         else callback(new Error("Failed " + options.name + ". Exit code " + code));                     
                     });
@@ -401,7 +401,7 @@ define(function(require, exports, module) {
             // make sure sudo is called with correct passwd and 
             var script = (DEBUG ? "set -x\n" : "")
                 + 'export TERM=xterm\n' // helps with debian dialog error on apt-get install
-                + 'fcn() {\n'+ options.code + '\n}\n'
+                + 'fcn() {\n' + options.code + '\n}\n'
                 + 'sudo(){ /usr/bin/sudo -S -p "###[sudo] password for %p: " "$@" ; }\n'
                 + 'exit() { if [ "$1" == "0" ]; then echo ß; else echo "exiting with $1"; fi; command exit $1; }\n'
                 + 'fcn "$@" && echo ß\n';
@@ -409,14 +409,14 @@ define(function(require, exports, module) {
             proc.pty(options.bash || "bash", {
                 args: ["-c", script].concat(options.args || []),
                 cwd: options.cwd || null
-            }, function(err, pty){
+            }, function(err, pty) {
                 if (err) return callback(err);
                 
                 var done = false;
                 var buffer = "";
                 
                 // Pipe the data to the onData function
-                pty.on("data", function(chunk){
+                pty.on("data", function(chunk) {
                     buffer += chunk;
                     if (chunk.indexOf("ß") > -1) {
                         done = true;
@@ -426,7 +426,7 @@ define(function(require, exports, module) {
                 });
                 
                 // When process exits call callback
-                pty.on("exit", function(code){
+                pty.on("exit", function(code) {
                     if (!done && !code) code = "E_MISSING_END_MARKER";
                     
                     if (code) {
@@ -467,33 +467,33 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            get packages(){ return packages; },
+            get packages() { return packages; },
             
             /**
              * 
              */
-            get sessions(){ return sessions; },
+            get sessions() { return sessions; },
             
             /**
              * 
              */
-            get installed(){ return installed; },
+            get installed() { return installed; },
             
             /**
              * 
              */
-            get checked(){ return installChecked; },
+            get checked() { return installChecked; },
             
             /**
              * 
              */
-            get ptyEnabled(){ return installChecked && c9.platform != "win32"; },
+            get ptyEnabled() { return installChecked && c9.platform != "win32"; },
             
             /**
              * @ignore
              */
-            get waitForSuccess(){ return waitForSuccess; },
-            set waitForSuccess(v){ waitForSuccess = v; if (!v) emit("success"); },
+            get waitForSuccess() { return waitForSuccess; },
+            set waitForSuccess(v) { waitForSuccess = v; if (!v) emit("success"); },
             
             _events: [
                 /**
@@ -551,7 +551,7 @@ define(function(require, exports, module) {
             /**
              * @ignore
              */
-            $setPtyExec: function(v) { if (options.cli) parentPty = v }
+            $setPtyExec: function(v) { if (options.cli) parentPty = v; }
         });
         
         register(null, {

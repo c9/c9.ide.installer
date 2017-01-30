@@ -1,11 +1,11 @@
 define(function(require, exports, module) {
     
-module.exports = function(session, options){
+module.exports = function(session, options) {
     session.introduction = require("text!./intro.html");
     session.preInstallScript = require("text!./check-deps.sh");
     
     // Node.js
-    var NODEVERSION =  "v4.4.6";
+    var NODEVERSION = "v4.4.6";
     var nodeName = "node-" + NODEVERSION + "-" 
         + options.platform + "-" + options.arch;
     

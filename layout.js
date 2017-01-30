@@ -13,7 +13,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var loaded = false;
-        function load(){
+        function load() {
             if (loaded) return;
             loaded = true;
                 
@@ -24,17 +24,17 @@ define(function(require, exports, module) {
             ui.insertCss(require("text!/static/standalone/skin/default/flat-light.css"), false, plugin);
             
             var css = require("text!/static/plugins/c9.ide.layout.classic/keyframes.css");
-            css = css.replace(/@\{image-path\}/g, "/static/plugins/c9.ide.layout.classic/images")
+            css = css.replace(/@\{image-path\}/g, "/static/plugins/c9.ide.layout.classic/images");
             ui.insertCss(css, false, plugin);
         }
         
         /***** Lifecycle *****/
         
-        plugin.on("load", function(){
+        plugin.on("load", function() {
             load();
         });
         
-        plugin.on("unload", function(){
+        plugin.on("unload", function() {
             loaded = false;
         });
         

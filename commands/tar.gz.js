@@ -50,7 +50,7 @@ define(function(require, exports, module) {
             return p;
         }
         
-        function isAvailable(callback){
+        function isAvailable(callback) {
             callback(true);
         }
         

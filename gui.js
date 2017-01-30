@@ -49,17 +49,17 @@ define(function(require, exports, module) {
         var installing = false;
         var executeList;
         
-        function load(){
+        function load() {
             if (options.testing)
                 return plugin.show(true);
             
             commands.addCommand({
                 name: "showinstaller",
-                exec: function(editor, args){ 
+                exec: function(editor, args) { 
                     if (plugin.visible) return;
                     
                     if (args && args.packages) {
-                        args.packages.forEach(function(name){
+                        args.packages.forEach(function(name) {
                             installer.reinstall(name);
                         });
                         return;
@@ -85,7 +85,7 @@ define(function(require, exports, module) {
             installer.on("beforeStart", beforeStart, plugin);
             
             // Make sure GUI picks up reinstalls
-            installer.on("reinstall", function(e){
+            installer.on("reinstall", function(e) {
                 var prefs = settings.getJson("state/installer");
                 var pref = prefs[e.name] || 0;
                 delete pref.$version;
@@ -93,12 +93,12 @@ define(function(require, exports, module) {
             }, plugin);
         }
         
-        function beforeStart(e){
+        function beforeStart(e) {
             var session = e.session;
             
             // If there's already a session for that package running, abort this one.
             var pkgName = session.package.name;
-            if (sessions.some(function(n){ return n.package.name == pkgName; })) {
+            if (sessions.some(function(n) { return n.package.name == pkgName; })) {
                 session.abort();
                 return false;
             }
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
             sessions.push(session);
             
             // Clean up sessions array after session stopped
-            session.once("stop", function(){ sessions.remove(session); });
+            session.once("stop", function() { sessions.remove(session); });
             
             // Make sure there is an entry for this plugin so it's remembered
             // if it fails - so it can be reinstalled
@@ -130,13 +130,13 @@ define(function(require, exports, module) {
                 return false;
             }
             
-            var hasOptional = session.tasks.some(function(n){ 
+            var hasOptional = session.tasks.some(function(n) { 
                 return (n.$options || 0).optional;
             });
             
             if (installing) {
                 sessions.remove(session);
-                plugin.once("finished", function(){ beforeStart(e); });
+                plugin.once("finished", function() { beforeStart(e); });
                 return;
             }
             
@@ -144,7 +144,7 @@ define(function(require, exports, module) {
             if (settings.getBool("user/installer/@auto") && !plugin.visible) {
                 // Wait some time to start so that other sessions can be added
                 if (installing === false) {
-                    setTimeout(function(){
+                    setTimeout(function() {
                         draw();
                         plugin.startPage = overview;
                         plugin.show(true);
@@ -175,13 +175,13 @@ define(function(require, exports, module) {
         }
         
         var drawn;
-        function draw(){
+        function draw() {
             if (drawn) return;
             drawn = true;
             
             ui.insertCss(require("text!./style.css"), options.staticPrefix, plugin);
             
-            settings.on("user/installer/@auto", function(){
+            settings.on("user/installer/@auto", function() {
                 cbAlways.setAttribute("checked", settings.get("user/installer/@auto"));
             }, plugin);
             
@@ -191,7 +191,7 @@ define(function(require, exports, module) {
                 ui.insertHtml(e.html, 
                     require("text!./pages/intro.html"), intro);
             });
-            intro.on("show", function(){
+            intro.on("show", function() {
                 updateIntro();
             });
             
@@ -205,7 +205,7 @@ define(function(require, exports, module) {
                     container: e.html.querySelector("blockquote"),
                     enableCheckboxes: true,
                     
-                    columns : [
+                    columns: [
                         {
                             caption: "Name",
                             value: "name",
@@ -219,7 +219,7 @@ define(function(require, exports, module) {
                         }
                     ],
                     
-                    getClassName: function(node){
+                    getClassName: function(node) {
                         return !node.optional ? "required" : "";
                     }
                 
@@ -230,9 +230,9 @@ define(function(require, exports, module) {
                     // }
                 }, plugin);
                 
-                function updateParents(nodes){
+                function updateParents(nodes) {
                     var parents = {}, toChildren = {};
-                    nodes.forEach(function(n){ 
+                    nodes.forEach(function(n) { 
                         if (!n.parent.label) { // Root
                             toChildren[n.label] = true;
                             parents[n.label] = n;
@@ -243,17 +243,17 @@ define(function(require, exports, module) {
                             parents[n.parent.label] = n.parent;
                     });
                     
-                    Object.keys(parents).forEach(function(label){
+                    Object.keys(parents).forEach(function(label) {
                         var parent = parents[label];
                         
                         if (toChildren[label]) {
                             var all = true;
-                            var hasUnchecked = parent.items.some(function(n){ 
+                            var hasUnchecked = parent.items.some(function(n) { 
                                 return nodes.indexOf(n) == -1 && !n.isChecked;
                             });
                             if (hasUnchecked) parent.isChecked = true;
                             
-                            parent.items.forEach(function(n){
+                            parent.items.forEach(function(n) {
                                 if (!n.optional) all = false;
                                 else n.isChecked = parent.isChecked ? true : false;
                             });
@@ -263,7 +263,7 @@ define(function(require, exports, module) {
                         }
                         
                         var state = 0;
-                        parent.items.forEach(function(n){
+                        parent.items.forEach(function(n) {
                             if (n.isChecked) state++;
                         });
                         if (state == parent.items.length)
@@ -285,7 +285,7 @@ define(function(require, exports, module) {
                 datagrid.on("check", updateParents);
                 datagrid.on("uncheck", updateParents);
             });
-            overview.on("show", function(){
+            overview.on("show", function() {
                 updatePackages();
                 
                 if (getSelectedSessions().length === 0) {
@@ -312,9 +312,9 @@ define(function(require, exports, module) {
                     container: logDiv
                 }, plugin);
                 
-                terminal.on("input", function(e){
+                terminal.on("input", function(e) {
                     var data = e.data;
-                    sessions.some(function(session){
+                    sessions.some(function(session) {
                         if (session.executing) {
                             if (session.process)
                                 session.process.write(data);
@@ -324,11 +324,11 @@ define(function(require, exports, module) {
                 });
                 
                 var cb = div.querySelector("#details");
-                cb.addEventListener("click", function(){
+                cb.addEventListener("click", function() {
                     toggleLogDetails(cb.checked);
                 });
                 
-                plugin.addOther(function(){
+                plugin.addOther(function() {
                     div.innerHTML = "";
                     div.parentNode.removeChild(div);
                     
@@ -381,14 +381,14 @@ define(function(require, exports, module) {
                     plugin.gotoPage(complete);
                     plugin.showCancel = false;
                         
-                    executeList.forEach(function(session){
+                    executeList.forEach(function(session) {
                         if (session.executing)
                             session.abort();
                     });
                 }
             }, plugin);
             
-            plugin.on("finish", function(e){
+            plugin.on("finish", function(e) {
                 if (e.activePage.name == "overview") {
                     // Store selection in state settings
                     var state = {};
@@ -406,7 +406,7 @@ define(function(require, exports, module) {
                     return;
                 }
                 
-                runHeadless(function(){
+                runHeadless(function() {
                     if (installer.waitForSuccess)
                         installer.waitForSuccess = false;
                 });
@@ -418,24 +418,24 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function updateIntro(){
+        function updateIntro() {
             var html = "";
             
-            sessions.forEach(function(session){
+            sessions.forEach(function(session) {
                 html += session.introduction || "";
             });
             intro.container.querySelector("blockquote").innerHTML = html;
         }
         
-        function updatePackages(){
+        function updatePackages() {
             if (!datagrid) return;
             
-            var root = { items: [] };
+            var root = { items: []};
             
             // Ignore sessions if previously decided not to install
             var prefs = settings.getJson("state/installer");
             
-            sessions.forEach(function(session){
+            sessions.forEach(function(session) {
                 var sessionState = prefs[session.package.name] || 0;
                 
                 var node = { 
@@ -448,7 +448,7 @@ define(function(require, exports, module) {
                 root.items.push(node);
                 
                 var optional = false, checked = 0;
-                session.tasks.forEach(function(task){
+                session.tasks.forEach(function(task) {
                     var options = task.$options;
                     if (!options) return;
                     
@@ -472,7 +472,7 @@ define(function(require, exports, module) {
         }
         
         var lastComplete;
-        function setCompleteMessage(title, msg){
+        function setCompleteMessage(title, msg) {
             if (!complete.container)
                 return (lastComplete = [title, msg]);
                 
@@ -480,19 +480,19 @@ define(function(require, exports, module) {
             complete.container.querySelector("blockquote").innerHTML = msg || lastComplete[1];
         }
         
-        function getSelectedSessions(ignored, state){
+        function getSelectedSessions(ignored, state) {
             var sessions = [];
             var start = settings.getJson("state/installer");
             var nodes = datagrid.root.items;
             
-            nodes.filter(function(node){
+            nodes.filter(function(node) {
                 var sessionState;
                 var session = node.session;
                 if (state) sessionState = {};
                 
                 var hasNotInstalled = 0;
                 var totalIgnored = 0;
-                session.tasks.forEach(function(task){
+                session.tasks.forEach(function(task) {
                     var options = task.$options || 0;
                     var alreadyInstalled = (start && start[session.package.name] || 0)[options.name] === false;
                     
@@ -522,7 +522,7 @@ define(function(require, exports, module) {
             return sessions;
         }
         
-        function clear(){
+        function clear() {
             terminal.clear();
         }
         
@@ -536,7 +536,7 @@ define(function(require, exports, module) {
             terminal.write((color || "") + msg + (color ? unset || RESETCOLOR : "") + "\n");
         }
         
-        function toggleLogDetails(show){
+        function toggleLogDetails(show) {
             
         }
         
@@ -561,15 +561,15 @@ define(function(require, exports, module) {
             // sessions = [];
             
             // Abort sessions that won't be run
-            aborted.forEach(function(session){
+            aborted.forEach(function(session) {
                 session.abort();
             });
             
             // Run all selected sessions
-            async.eachSeries(executeList, function(session, next){
+            async.eachSeries(executeList, function(session, next) {
                 if (aborting) return next(new Error("Aborted"));
                 
-                session.on("run", function(){
+                session.on("run", function() {
                     var heading = "Package " + session.package.name 
                         + " " + session.package.version;
                     logln(heading + "\n" + Array(heading.length + 1).join("-"));
@@ -578,21 +578,21 @@ define(function(require, exports, module) {
                 });
                 
                 var lastOptions;
-                session.on("each", function(e){
+                session.on("each", function(e) {
                     if (lastOptions != e.options) {
                         lastOptions = e.options;
                         if (e.options.name)
                             logln("Installing " + e.options.name, BLUE);
                     }
                 });
-                session.on("data", function(e){
+                session.on("data", function(e) {
                     log(e.data);
                     
                     // @TODO detect password: input
                 });
                 
                 session.start(next, true);
-            }, function(err){
+            }, function(err) {
                 logDiv.scrollTop = logDiv.scrollHeight;
                 
                 plugin.showCancel = false;
@@ -615,7 +615,7 @@ define(function(require, exports, module) {
                     
                     // Restart sessions
                     sessions = [];
-                    executeList.forEach(function(session){
+                    executeList.forEach(function(session) {
                         installer.createSession(session.package.name, 
                             session.package.version, 
                             installer.packages[session.package.name].populate);
@@ -627,7 +627,7 @@ define(function(require, exports, module) {
                         plugin.showFinish = true;
                     
                     // Call finish when the user hides the window
-                    plugin.once("hide", function(){ emit("finished"); });
+                    plugin.once("hide", function() { emit("finished"); });
                 }
                 else {
                     logln("");
@@ -641,7 +641,7 @@ define(function(require, exports, module) {
                     
                     setCompleteMessage("Installation Complete",
                         require("text!./install/success.html")
-                            .replace("{{sessions}}", executeList.map(function(s){
+                            .replace("{{sessions}}", executeList.map(function(s) {
                                 return s.package.name + " " + s.package.version;
                             }).join("</li><li>")));
                     plugin.showNext = true;
@@ -651,25 +651,25 @@ define(function(require, exports, module) {
             });
         }
         
-        function addUnselectedPackages(){
+        function addUnselectedPackages() {
             // Make sure all items that were previously not installed are listed again.
             var prefs = settings.getJson("state/installer");
             for (var pkgName in prefs) {
-                if (!sessions.some(function(n){ return n.package.name == pkgName; })) {
+                if (!sessions.some(function(n) { return n.package.name == pkgName; })) {
                     installer.reinstall(pkgName, true);
                 }
             }
         }
         
-        function runHeadless(callback){
-            async.eachSeries(sessions, function(session, next){
+        function runHeadless(callback) {
+            async.eachSeries(sessions, function(session, next) {
                 session.start(next, true);
             }, callback);
         }
         
         /***** Lifecycle *****/
         
-        plugin.on("draw", function(){
+        plugin.on("draw", function() {
             draw();
             
             // Add Checkbox to toggle Always Installation
@@ -682,7 +682,7 @@ define(function(require, exports, module) {
             });
             cbAlways = plugin.getElement("cbAlways");
             
-            cbAlways.on("afterchange", function(e){
+            cbAlways.on("afterchange", function(e) {
                 if (e.value) {
                     plugin.showCancel = false;
                     plugin.showFinish = true;
@@ -703,11 +703,11 @@ define(function(require, exports, module) {
             });
         });
         
-        plugin.on("load", function(){
+        plugin.on("load", function() {
             load();
         });
         
-        plugin.on("unload", function(){
+        plugin.on("unload", function() {
             aborting = false;
             terminal = null;
             logDiv = null;
@@ -726,16 +726,16 @@ define(function(require, exports, module) {
             installing = false;
         });
         
-        plugin.on("hide", function(){
+        plugin.on("hide", function() {
             // Clear terminal to be used another time
             terminal && terminal.clear();
         });
         
-        plugin.on("show", function(){
+        plugin.on("show", function() {
             plugin.allowClose = installer.checked;
         });
         
-        plugin.on("resize", function(){
+        plugin.on("resize", function() {
             terminal && terminal.resize();
         });
         

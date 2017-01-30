@@ -29,11 +29,11 @@ define(function(require, exports, module) {
         }
         
         var available;
-        function isAvailable(callback){
+        function isAvailable(callback) {
             if (typeof available != "undefined")
                 return callback(available);
             
-            proc.execFile("which", { args: ["yum"] }, function(err, stdout){
+            proc.execFile("which", { args: ["yum"]}, function(err, stdout) {
                 if (err) return callback(false);
                 
                 available = stdout.length > 0;

@@ -25,7 +25,7 @@ define(function(require, exports, module) {
             }, onData, callback);
         }
         
-        function isAvailable(callback){
+        function isAvailable(callback) {
             return callback(c9.platform == "darwin");
         }
         
